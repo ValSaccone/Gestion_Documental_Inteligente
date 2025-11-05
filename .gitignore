@@ -1,0 +1,12 @@
+# Ignorar entorno virtual y base de datos local
+practica_supervisada/
+database/
+
+# Ignorar archivos temporales
+*.log
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignorar configuraciones locales
+.env
