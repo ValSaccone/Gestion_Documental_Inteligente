@@ -10,3 +10,6 @@ __pycache__/
 
 # Ignorar configuraciones locales
 .env
+
+# Ignorar dataset creado
+dataset/facturas_dataset/
