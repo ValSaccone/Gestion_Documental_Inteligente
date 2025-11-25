@@ -1,0 +1,17 @@
+# yolo/factura_dataset.yaml
+
+train: dataset_dividido/train.txt
+val: dataset_dividido/val.txt
+test: dataset_dividido/test.txt
+
+nc: 8
+names: [
+    "numero_factura",
+    "fecha",
+    "cuit",
+    "total",
+    "items",
+    "condicion_iva",
+    "empresa",
+    "qr"
+]

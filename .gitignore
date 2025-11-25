@@ -14,3 +14,31 @@ __pycache__/
 # Ignorar dataset creado
 dataset/facturas_dataset/
 dataset/dataset_imagenes/
+ML_module/dataset_dividido/
+
+# --- YOLO RUNS ---
+runs/
+
+# --- WEIGHTS / MODEL FILES ---
+*.pt
+*.onnx
+*.engine
+
+# --- PYTHON CACHE ---
+__pycache__/
+*.py[cod]
+
+# --- JUPYTER ---
+.ipynb_checkpoints/
+
+# --- VIRTUAL ENVIRONMENTS ---
+venv/
+.venv/
+env/
+
+# --- IDE FILES ---
+.idea/
+
+# --- SYSTEM FILES ---
+.DS_Store
+Thumbs.db
