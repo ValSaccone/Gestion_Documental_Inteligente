@@ -24,15 +24,19 @@ def convert_to_image(input_path, output_path):
 
 
 def process_dataset(
-    root="facturas",
-    out_root="dataset_imagenes"
+        root="facturas",
+        out_root="dataset_imagenes"
 ):
     """
     Recorre todas las carpetas (Factura_A, Factura_B, etc.)
-    y convierte cada PDF en PNG manteniendo la estructura.
+    y convierte cada PDF en PNG. Los archivos de imagen y TXT
+    se guardan en una única carpeta plana (out_root).
     """
 
     print(f"Leyendo dataset desde: {root}")
+
+    # Aseguramos que la carpeta de salida (plana) exista
+    os.makedirs(out_root, exist_ok=True)
 
     for folder in os.listdir(root):
         folder_path = os.path.join(root, folder)
@@ -40,24 +44,77 @@ def process_dataset(
         if not os.path.isdir(folder_path):
             continue  # saltar archivos como annotations.json
 
-        # Crear carpeta espejo en dataset/dataset_images/
-        out_folder = os.path.join(out_root, folder)
-        os.makedirs(out_folder, exist_ok=True)
-
         # Recorrer PDFs dentro de cada carpeta
         for filename in os.listdir(folder_path):
             if not filename.lower().endswith(".pdf"):
                 continue
 
             pdf_path = os.path.join(folder_path, filename)
-            out_name = filename.replace(".pdf", ".png")
-            out_path = os.path.join(out_folder, out_name)
+
+            # Crear un nombre único para la imagen y el TXT (ej: Factura_A_001.png)
+            base_name = f"{folder}_{filename.replace('.pdf', '')}"
+            out_name = f"{base_name}.png"
+
+            # La ruta de salida apunta directamente a la carpeta raíz 'out_root'
+            out_path = os.path.join(out_root, out_name)
 
             print(f"Convirtiendo: {pdf_path}")
             convert_to_image(pdf_path, out_path)
 
+            # Mover y Renombrar el archivo TXT de Anotación
+            txt_name = filename.replace(".pdf", ".txt")
+            txt_path_origen = os.path.join(folder_path, txt_name)
+
+            if os.path.exists(txt_path_origen):
+                txt_path_destino = os.path.join(out_root, f"{base_name}.txt")
+                os.rename(txt_path_origen, txt_path_destino)
+
     print("Conversión completada.")
+
+
+def mover_anotaciones_txt(
+        root="facturas",
+        out_root="dataset_imagenes"
+):
+    """
+    Busca los archivos .txt de anotación en las subcarpetas de 'root'
+    y los MUEVE a la carpeta plana 'out_root', renombrándolos.
+    """
+
+    print("\nIniciando movimiento de archivos de anotación (.txt)...")
+
+    # Aseguramos que la carpeta de destino de los TXT exista (ya debería existir)
+    os.makedirs(out_root, exist_ok=True)
+
+    for folder in os.listdir(root):
+        folder_path = os.path.join(root, folder)
+
+        if not os.path.isdir(folder_path):
+            continue
+
+            # Recorremos los archivos en busca de los PDF para obtener el 'base_name'
+        for filename in os.listdir(folder_path):
+
+            # Solo buscamos PDFs para saber cómo se llama el TXT
+            if not filename.lower().endswith(".pdf"):
+                continue
+
+            # --- Lógica de Movimiento del TXT ---
+            base_name = f"{folder}_{filename.replace('.pdf', '')}"
+            txt_name = filename.replace(".pdf", ".txt")
+
+            txt_path_origen = os.path.join(folder_path, txt_name)
+
+            if os.path.exists(txt_path_origen):
+                txt_path_destino = os.path.join(out_root, f"{base_name}.txt")
+
+                # Mueve el TXT de su origen a la carpeta plana y lo renombra
+                os.rename(txt_path_origen, txt_path_destino)
+                print(f"  Movido TXT: {txt_path_origen} -> {txt_path_destino}")
+
+    print("Movimiento de anotaciones completado.")
 
 
 if __name__ == "__main__":
     process_dataset()
+    mover_anotaciones_txt()

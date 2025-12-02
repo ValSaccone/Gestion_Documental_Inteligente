@@ -12,7 +12,6 @@ __pycache__/
 .env
 
 # Ignorar dataset creado
-dataset/facturas_dataset/
 dataset/dataset_imagenes/
 dataset/facturas/
 ML_module/dataset_dividido/
