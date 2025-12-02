@@ -24,8 +24,8 @@ def convert_to_image(input_path, output_path):
 
 
 def process_dataset(
-    root="dataset/facturas_dataset",
-    out_root="dataset/dataset_imagenes"
+    root="facturas",
+    out_root="dataset_imagenes"
 ):
     """
     Recorre todas las carpetas (Factura_A, Factura_B, etc.)
