@@ -2,14 +2,14 @@
 
 # Ruta BASE del dataset.
 # La ruta '..' sube un nivel (de ML_module/ a Gestion_Documental_Inteligente/)
-# para encontrar la carpeta 'dataset_dividido'.
-path: ./dataset_dividido
+# para encontrar la carpeta 'dataset_preprocesado'.
+path: ./dataset_preprocesado
 
 # Rutas a las imágenes de entrenamiento, validación y prueba.
 # Estas rutas son RELATIVAS a la ruta base definida en 'path'.
-train: train/images  # Apunta a ../dataset_dividido/train/images
-val: val/images      # Apunta a ../dataset_dividido/val/images
-test: test/images    # Apunta a ../dataset_dividido/test/images (Opcional)
+train: train/images  # Apunta a ../dataset_preprocesado/train/images
+val: val/images      # Apunta a ../dataset_preprocesado/val/images
+test: test/images    # Apunta a ../dataset_preprocesado/test/images (Opcional)
 
 # Clases
 nc: 8

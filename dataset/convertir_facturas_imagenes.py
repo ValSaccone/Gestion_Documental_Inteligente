@@ -3,6 +3,7 @@ import mimetypes
 from pdf2image import convert_from_path
 import cv2
 
+
 def convert_to_image(input_path, output_path):
     mime, _ = mimetypes.guess_type(input_path)
 
@@ -51,8 +52,19 @@ def process_dataset(
 
             pdf_path = os.path.join(folder_path, filename)
 
-            # Crear un nombre único para la imagen y el TXT (ej: Factura_A_001.png)
-            base_name = f"{folder}_{filename.replace('.pdf', '')}"
+            # 💡 CORRECCIÓN CLAVE:
+            # 1. Eliminar '.pdf'
+            name_without_ext = filename.replace('.pdf', '')
+
+            # 2. Verificar si el nombre del archivo ya contiene el nombre de la carpeta
+            if name_without_ext.lower().startswith(folder.lower()):
+                # Si es así, usamos solo el nombre del archivo (ya es único y correcto)
+                base_name = name_without_ext
+            else:
+                # Si no, concatenamos el nombre de la carpeta para asegurar unicidad
+                base_name = f"{folder}_{name_without_ext}"
+            # --- FIN CORRECCIÓN CLAVE ---
+
             out_name = f"{base_name}.png"
 
             # La ruta de salida apunta directamente a la carpeta raíz 'out_root'
@@ -66,6 +78,7 @@ def process_dataset(
             txt_path_origen = os.path.join(folder_path, txt_name)
 
             if os.path.exists(txt_path_origen):
+                # Usamos el base_name corregido para el destino del TXT
                 txt_path_destino = os.path.join(out_root, f"{base_name}.txt")
                 os.rename(txt_path_origen, txt_path_destino)
 
@@ -100,9 +113,16 @@ def mover_anotaciones_txt(
                 continue
 
             # --- Lógica de Movimiento del TXT ---
-            base_name = f"{folder}_{filename.replace('.pdf', '')}"
-            txt_name = filename.replace(".pdf", ".txt")
 
+            name_without_ext = filename.replace('.pdf', '')
+
+            if name_without_ext.lower().startswith(folder.lower()):
+                base_name = name_without_ext
+            else:
+                base_name = f"{folder}_{name_without_ext}"
+
+
+            txt_name = filename.replace(".pdf", ".txt")
             txt_path_origen = os.path.join(folder_path, txt_name)
 
             if os.path.exists(txt_path_origen):
@@ -110,7 +130,7 @@ def mover_anotaciones_txt(
 
                 # Mueve el TXT de su origen a la carpeta plana y lo renombra
                 os.rename(txt_path_origen, txt_path_destino)
-                print(f"  Movido TXT: {txt_path_origen} -> {txt_path_destino}")
+                print(f"TXT Movido: {txt_path_origen} -> {txt_path_destino}")
 
     print("Movimiento de anotaciones completado.")
 
