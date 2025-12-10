@@ -3,7 +3,7 @@
 # Ruta BASE del dataset.
 # La ruta '..' sube un nivel (de ML_module/ a Gestion_Documental_Inteligente/)
 # para encontrar la carpeta 'dataset_preprocesado'.
-path: ./dataset_preprocesado
+path: ./dataset_dividido
 
 # Rutas a las imágenes de entrenamiento, validación y prueba.
 # Estas rutas son RELATIVAS a la ruta base definida en 'path'.
