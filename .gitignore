@@ -15,7 +15,7 @@ __pycache__/
 dataset/dataset_imagenes/
 dataset/facturas/
 ML_module/dataset_dividido/
-
+OCR/facturas_prueba
 # --- YOLO RUNS ---
 runs/
 
@@ -23,6 +23,10 @@ runs/
 *.pt
 *.onnx
 *.engine
+
+#--- Logs y temp rois ---
+OCR/logs
+OCR/temp_rois
 
 # --- PYTHON CACHE ---
 __pycache__/
