@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -9,7 +9,7 @@ class Factura(Base):
     numero = Column(String, nullable=False)
     fecha = Column(Date)
     tipo_factura = Column(String)
-    total = Column(String)
+    total = Column(Float)
 
     proveedor_id = Column(Integer, ForeignKey("proveedores.id"))
     usuario_id = Column(Integer, ForeignKey("usuarios.id"))
