@@ -21,3 +21,6 @@ class Factura(Base):
         back_populates="factura",
         cascade="all, delete-orphan"
     )
+
+
+

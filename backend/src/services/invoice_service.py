@@ -3,6 +3,26 @@ from models.factura import Factura
 from models.proveedor import Proveedor
 from models.detalle_factura import DetalleFactura
 
+def factura_to_response(factura):
+    return {
+        "id": factura.id,
+        "invoiceNumber": factura.numero,
+        "date": factura.fecha,
+        "total": factura.total,
+        "provider": factura.proveedor.nombre,
+        "providerCuit": factura.proveedor.cuit,
+        "providerAddress": factura.proveedor.direccion,
+        "items": [
+            {
+                "description": d.descripcion,
+                "quantity": d.cantidad,
+                "unitPrice": d.precio_unitario
+            }
+            for d in factura.detalles
+        ]
+    }
+
+
 def create_invoice(db: Session, data: dict):
     proveedor = (
         db.query(Proveedor)
@@ -41,3 +61,4 @@ def create_invoice(db: Session, data: dict):
 
     db.commit()
     return factura
+
