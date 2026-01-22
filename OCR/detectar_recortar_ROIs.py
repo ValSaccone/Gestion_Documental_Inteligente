@@ -1,66 +1,91 @@
 import os
 import cv2
 from ultralytics import YOLO
+from pathlib import Path
 
-# Cargar modelo entrenado
-MODEL_PATH = "../ML_module/models/model_yolo8n_v1_best.pt"
-model = YOLO(MODEL_PATH)
+# ==============================
+# MODELO
+# ==============================
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / ".." / "runs" / "models" / "model_yolo8n_v4_best.pt"
+print("Ruta del modelo probado:", MODEL_PATH)
 
-# Carpeta para guardar ROIs recortados
-TEMP_ROI_DIR = "./temp_rois"
-os.makedirs(TEMP_ROI_DIR, exist_ok=True)
+model = YOLO(str(MODEL_PATH))
 
-# Mapeo para nombres de clases
+# ==============================
+# DEBUG ROIS
+# ==============================
+TEMP_ROI_DIR = BASE_DIR / "temp_rois"
+TEMP_ROI_DIR.mkdir(exist_ok=True)
+
+# ==============================
+# CLASES (ORDEN REAL DEL DATASET)
+# ==============================
 CLASSES = [
+    "tipo_factura",
+    "razon_social",
+    "cuit_emisor",
     "numero_factura",
     "fecha",
-    "cuit_emisor",
-    "razon_social",
-    "tipo_factura",
     "tabla_items",
-    "total",
-    "qr"
+    "total"
 ]
 
-def detectar_recortar_roi(imagen_path):
-    """
-    Detecta regiones en una factura usando YOLO y recorta cada ROI.
-    Retorna un diccionario con paths de los recortes y coordenadas.
-    """
-    results = model(imagen_path)[0]
-    img = cv2.imread(imagen_path)
+# ==============================
+def expandir_roi(x1, y1, x2, y2, img, px=15):
+    h, w = img.shape[:2]
+    return (
+        max(0, x1 - px),
+        max(0, y1 - px),
+        min(w, x2 + px),
+        min(h, y2 + px),
+    )
 
-    if img is None:
-        raise ValueError(f"No se pudo leer la imagen: {imagen_path}")
-
+# ==============================
+def detectar_recortar_roi_img(img, image_id):
+    results = model(img, conf=0.25)[0]
     detecciones = {}
 
-    for box in results.boxes:
+    for i, box in enumerate(results.boxes):
         cls_id = int(box.cls[0])
         class_name = CLASSES[cls_id]
         conf = float(box.conf[0])
 
-        # Coordenadas
-        x1, y1, x2, y2 = box.xyxy[0].tolist()
-        x1, y1, x2, y2 = map(int, (x1, y1, x2, y2))
+        x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
 
-        # Recorte
+        # Ajustes por campo
+        if class_name in ["cuit_emisor", "total"]:
+            x1, y1, x2, y2 = expandir_roi(x1, y1, x2, y2, img, px=20)
+
+
+        elif class_name == "tipo_factura":
+            h, w = img.shape[:2]
+            x1 = max(0, x1 - 5)
+            x2 = min(w, x2 + 5)
+            y1 = max(0, y1 - 25)
+            y2 = max(y1 + 20, y2 - 30)
+
+        elif class_name == "tabla_items":
+            y1 = min(img.shape[0], y1 + 30)  # sacar títulos
+
         roi = img[y1:y2, x1:x2]
-        roi_path = os.path.join(TEMP_ROI_DIR, f"{class_name}.png")
+        if roi.size == 0:
+            continue
 
-        cv2.imwrite(roi_path, roi)
+        # ==============================
+        # GUARDAR ROI SIN SOBREESCRIBIR
+        # ==============================
+        roi_name = f"{image_id}_{class_name}_{i}_{int(conf*100)}.png"
+        cv2.imwrite(
+            str(TEMP_ROI_DIR / roi_name),
+            roi
+        )
 
         detecciones[class_name] = {
             "bbox": [x1, y1, x2, y2],
             "conf": conf,
-            "roi_path": roi_path
+            "roi": roi
         }
 
     return detecciones
 
-
-if __name__ == "__main__":
-    # Ejemplo de prueba
-    imagen = "./facturas_prueba/factura1.png"
-    out = detectar_recortar_roi(imagen)
-    print(out)

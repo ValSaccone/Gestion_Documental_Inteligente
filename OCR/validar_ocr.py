@@ -2,10 +2,14 @@
 
 import os
 import csv
-from pipeline_detectar_yolo_ocr import procesar_factura
+import cv2
+
+from pipeline_detectar_yolo_ocr import procesar_factura_img
+from normalizar_ocr import NORMALIZADORES
+
 
 # ----------------------------------------
-# 1) Función para guardar resultados en CSV
+# 1) Guardar resultados
 # ----------------------------------------
 
 def guardar_validacion(resultados, filename="validacion_ocr.csv"):
@@ -14,20 +18,26 @@ def guardar_validacion(resultados, filename="validacion_ocr.csv"):
 
     ruta_salida = os.path.join(logs_dir, filename)
 
-    escribir_encabezado = not os.path.exists(ruta_salida)
-
-    with open(ruta_salida, "a", newline="", encoding="utf-8") as f:
+    with open(ruta_salida, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-
-        if escribir_encabezado:
-            writer.writerow(["factura", "campo", "texto_ocr", "texto_esperado", "correcto"])
+        writer.writerow([
+            "factura",
+            "campo",
+            "texto_ocr",
+            "texto_ocr_normalizado",
+            "texto_esperado",
+            "texto_esperado_normalizado",
+            "correcto"
+        ])
 
         for r in resultados:
             writer.writerow([
                 r["factura"],
                 r["campo"],
                 r["texto_ocr"],
+                r["texto_ocr_normalizado"],
                 r["texto_esperado"],
+                r["texto_esperado_normalizado"],
                 r["correcto"]
             ])
 
@@ -35,147 +45,42 @@ def guardar_validacion(resultados, filename="validacion_ocr.csv"):
 
 
 # ----------------------------------------
-# 2) Valores esperados (los completás vos)
+# 2) Valores esperados
 # ----------------------------------------
 
 VALORES_ESPERADOS = {
-
-    "factura_A_0004.png": {
-        "numero_factura": "95898083",
-        "fecha": "26/06/2024",
-        "cuit_emisor": "30-88429230-3",
-        "razon_social": "Diaz-Benitez S.A.",
+    "factura_A_0019.png": {
+        "numero_factura": "90672257",
+        "fecha": "03/01/2026",
+        "cuit_emisor": "30-61504717-8",
+        "razon_social": "TORRES LLC",
         "tipo_factura": "A",
         "tabla_items": "N/A",
-        "total": "129.067,54",
-        "qr": "N/A"
+        "total": "2.757,90"
     },
-
-    "factura_A_0018.png": {
-        "numero_factura": "54364782",
-        "fecha": "19/05/2024",
-        "cuit_emisor": "24-75899328-0",
-        "razon_social": "Gomez-Luna SRL",
-        "tipo_factura": "A",
-        "tabla_items": "N/A",
-        "total": "102.460,40",
-        "qr": "N/A"
-    },
-
-    "factura_A_0039.png": {
-        "numero_factura": "23212703",
-        "fecha": "19/11/2024",
-        "cuit_emisor": "34-44392912-0",
-        "razon_social": "Gutierrez and Sons SRL",
-        "tipo_factura": "A",
-        "tabla_items": "N/A",
-        "total": "180.289,72",
-        "qr": "N/A"
-    },
-
-    "factura_B_0668.png": {
-        "numero_factura": "56735358",
-        "fecha": "08/05/2025",
-        "cuit_emisor": "27-98675762-8",
-        "razon_social": "Cordoba, Gonzalez and Rios SRL",
+    "factura_B_0658.png": {
+        "numero_factura": "79770129",
+        "fecha": "01/01/2026",
+        "cuit_emisor": "27-17440151-6",
+        "razon_social": "LEIVA CARRIZO",
         "tipo_factura": "B",
         "tabla_items": "N/A",
-        "total": "115.039,63",
-        "qr": "N/A"
+        "total": "2.605,18"
     },
-
-    "factura_B_0725.png": {
-        "numero_factura": "87834161",
-        "fecha": "31/05/2024",
-        "cuit_emisor": "33-18420034-9",
-        "razon_social": "Castillo-Acosta S.A.",
-        "tipo_factura": "B",
-        "tabla_items": "N/A",
-        "total": "71.086,18",
-        "qr": "N/A"
-    },
-
-    "factura_B_0737.png": {
-        "numero_factura": "36024141",
-        "fecha": "08/03/2025",
-        "cuit_emisor": "33-43890163-7",
-        "razon_social": "Blanco-Ramirez S.A.",
-        "tipo_factura": "B",
-        "tabla_items": "N/A",
-        "total": "200.755,29",
-        "qr": "N/A"
-    },
-
-    "factura_C_0922.png": {
-        "numero_factura": "00513451",
-        "fecha": "27/07/2025",
-        "cuit_emisor": "20-55322589-2",
-        "razon_social": "Maidana Inc SRL",
+    "factura_C_0720.png": {
+        "numero_factura": "08146836",
+        "fecha": "05/01/2026",
+        "cuit_emisor": "23-58091128-6",
+        "razon_social": "DUARTE, SUAREZ AND MENDEZ",
         "tipo_factura": "C",
         "tabla_items": "N/A",
-        "total": "74.098,55",
-        "qr": "N/A"
-    },
-
-    "factura_C_0935.png": {
-        "numero_factura": "47638359",
-        "fecha": "08/11/2025",
-        "cuit_emisor": "27-73909312-8",
-        "razon_social": "Cordoba-Soto S.R.L.",
-        "tipo_factura": "C",
-        "tabla_items": "N/A",
-        "total": "19.605,30",
-        "qr": "N/A"
-    },
-
-    "factura_A_0950.png": {
-        "numero_factura": "27752257",
-        "fecha": "30/04/2024",
-        "cuit_emisor": "23-79261065-5",
-        "razon_social": "Arias, Garcia and Silva SRL",
-        "tipo_factura": "C",
-        "tabla_items": "N/A",
-        "total": "21.094,73",
-        "qr": "N/A"
-    },
-
-    "Ticket_Comun_ticket_0466.png": {
-        "numero_factura": "3998",
-        "fecha": "24/05/2025",
-        "cuit_emisor": "23-14827617-0",
-        "razon_social": "PANADERÍA LA NUEVA",
-        "tipo_factura": "N/A",      # No es factura A/B/C
-        "tabla_items": "N/A",
-        "total": "154.290,85",
-        "qr": "N/A"
-    },
-
-    "Ticket_Comun_ticket_0475.png": {
-        "numero_factura": "4901",
-        "fecha": "25/04/2025",
-        "cuit_emisor": "24-17584085-9",
-        "razon_social": "SUPERMERCADO LOS ANDES",
-        "tipo_factura": "N/A",
-        "tabla_items": "N/A",
-        "total": "117.182,56",
-        "qr": "N/A"
-    },
-
-    "Ticket_Comun_ticket_0542.png": {
-        "numero_factura": "2751",
-        "fecha": "22/11/2025",
-        "cuit_emisor": "23-51314930-5",
-        "razon_social": "KIOSCO 24HS",
-        "tipo_factura": "N/A",
-        "tabla_items": "N/A",
-        "total": "232.437,49",
-        "qr": "N/A"
+        "total": "5.620,69"
     }
 }
 
 
 # ----------------------------------------
-# 3) Validación de facturas del lote
+# 3) Validación OCR + YOLO
 # ----------------------------------------
 
 def validar_facturas():
@@ -188,21 +93,44 @@ def validar_facturas():
         print(f"\n🔎 Procesando {archivo}...")
 
         ruta = os.path.join(carpeta, archivo)
-        resultado = procesar_factura(ruta)
+        img = cv2.imread(ruta)
 
+        if img is None:
+            print(f"❌ No se pudo leer la imagen: {ruta}")
+            continue
+
+        image_id = os.path.splitext(archivo)[0]
+        resultado = procesar_factura_img(img, image_id)
         esperados = VALORES_ESPERADOS.get(archivo, {})
 
         for campo, datos in resultado.items():
-            texto_ocr = datos["texto_ocr"]
+            texto_ocr = datos.get("texto_ocr") or ""
             texto_esp = esperados.get(campo, "")
 
-            correcto = (texto_ocr.strip() == texto_esp.strip())
+            # Normalización segura
+            if campo in NORMALIZADORES:
+                texto_ocr_norm = NORMALIZADORES[campo](texto_ocr)
+                texto_esp_norm = NORMALIZADORES[campo](texto_esp)
+            else:
+                texto_ocr_norm = texto_ocr.strip()
+                texto_esp_norm = texto_esp.strip()
+
+            # Regla especial: tabla_items
+            if campo == "tabla_items":
+                correcto = texto_ocr_norm != ""
+            # Regla especial: total (comparar decimal)
+            elif campo == "total":
+                correcto = texto_ocr_norm == texto_esp_norm
+            else:
+                correcto = texto_ocr_norm == texto_esp_norm
 
             resultados_log.append({
                 "factura": archivo,
                 "campo": campo,
                 "texto_ocr": texto_ocr,
+                "texto_ocr_normalizado": texto_ocr_norm,
                 "texto_esperado": texto_esp,
+                "texto_esperado_normalizado": texto_esp_norm,
                 "correcto": correcto
             })
 
@@ -210,10 +138,9 @@ def validar_facturas():
 
 
 # ----------------------------------------
-# 4) Ejecución directa
+# 4) Main
 # ----------------------------------------
 
 if __name__ == "__main__":
     validar_facturas()
     print("\n✔ Validación completa")
-

@@ -1,4 +1,9 @@
 from datetime import date
+from OCR.pipeline_detectar_yolo_ocr import procesar_factura_img
+
+def process_invoice_img(img):
+    return procesar_factura_img(img)
+
 
 def process_invoice(file):
     """

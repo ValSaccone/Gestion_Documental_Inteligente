@@ -4,6 +4,10 @@ from db.session import get_db
 from services.ocr_service import process_invoice
 from schemas.invoice import InvoiceResponse, InvoiceCreate
 from models import Factura, DetalleFactura
+from fastapi import UploadFile, File, Depends
+import numpy as np
+import cv2
+from services.ocr_service import process_invoice_img
 
 
 #Router
@@ -14,11 +18,16 @@ async def process_invoice_endpoint(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    file_path = f"/tmp/{file.filename}"
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
+    contents = await file.read()
 
-    data = process_invoice(file_path)
+    # Convertir bytes a imagen OpenCV
+    img_array = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+
+    if img is None:
+        raise HTTPException(status_code=400, detail="Imagen inválida")
+
+    data = process_invoice_img(img)
     return data
 
 

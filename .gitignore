@@ -17,6 +17,7 @@ __pycache__/
 dataset/dataset_imagenes/
 dataset/facturas/
 ML_module/dataset_dividido/
+ML_module/dataset_dividido_augmented/
 OCR/facturas_prueba
 # --- YOLO RUNS ---
 runs/

@@ -28,8 +28,7 @@ YOLO_CLASS_MAP = {
     "numero_factura": 3,
     "fecha": 4,
     "tabla_items": 5,
-    "total": 6,
-    "qr": 7,
+    "total": 6
 }
 
 # ================== HELPERS ==================
@@ -74,11 +73,23 @@ def gen_items():
     return items
 
 def gen_meta(tipo):
+
+    # --- CONDICIÓN IVA SEGÚN TIPO DE FACTURA ---
+    if tipo == "A":
+        iva_emisor = "Responsable Inscripto"
+        iva_receptor = "IVA Responsable Inscripto"
+    elif tipo == "B":
+        iva_emisor = "Responsable Inscripto"
+        iva_receptor = "Consumidor Final"
+    else:  # C
+        iva_emisor = "Monotributo"
+        iva_receptor = "Consumidor Final"
+
     return {
         "emisor":{
             "razon": fake.company().upper(),
             "dom": fake.street_address()+" - Ciudad de Buenos Aires",
-            "iva": "Responsable Inscripto" if tipo!="C" else "Responsable Monotributo",
+            "iva": iva_emisor,
             "cuit": gen_cuit(),
             "iibb": "123-456789-0",
             "inicio": "01/01/2018"
@@ -86,7 +97,7 @@ def gen_meta(tipo):
         "receptor":{
             "razon": fake.company(),
             "cuit": gen_cuit(),
-            "iva": "IVA Responsable Inscripto" if tipo=="A" else "Consumidor Final",
+            "iva": iva_receptor,
             "dom": fake.street_address()+" - Capital Federal",
             "venta": "Cuenta Corriente"
         },
@@ -118,17 +129,15 @@ def draw_factura(path, tipo, m):
     c.rect(M+5, top_y, WIDTH-2*M-10, 55*mm)
 
     # ===== TIPO FACTURA =====
-    bx = WIDTH/2-12*mm
-    by = top_y+36*mm
-    c.rect(bx, by, 24*mm, 18*mm)
-    c.setFont("Helvetica-Bold",24)
-    c.drawCentredString(WIDTH/2, by+6*mm, tipo)
-    c.setFont("Helvetica",7)
-    c.drawCentredString(WIDTH/2, by+2*mm, f"COD. {TIPOS[tipo]}")
-
-    boxes["tipo_factura"] = (bx, by, bx+24*mm, by+18*mm)
-
-    c.line(WIDTH/2, top_y, WIDTH/2, by)
+    bx = WIDTH / 2 - 12 * mm
+    by = top_y + 36 * mm
+    boxes["tipo_factura"] = (bx, by + 2 * mm, bx + 24 * mm, by + 12 * mm)
+    c.rect(bx, by, 24 * mm, 18 * mm)
+    # letra centrada en el nuevo box
+    c.setFont("Helvetica-Bold", 24)
+    c.drawCentredString(WIDTH / 2, by + 8 * mm, tipo)
+    c.setFont("Helvetica", 7)
+    c.drawCentredString(WIDTH / 2, by + 2 * mm, f"COD. {TIPOS[tipo]}")
 
     # ===== IZQUIERDA EMISOR =====
     c.setFont("Helvetica",8)
@@ -149,7 +158,7 @@ def draw_factura(path, tipo, m):
     boxes["razon_social"] = (
         lx+35*mm,
         ly+4*mm,
-        lx+110*mm,
+        lx+95*mm,
         ly+12*mm
     )
 
@@ -239,10 +248,10 @@ def draw_factura(path, tipo, m):
         yy -= 7*mm
 
     boxes["tabla_items"] = (
-        M+5,
-        ty,
-        WIDTH-M-5,
-        ty+40*mm
+        M + 5,
+        ty + 10 * mm,
+        WIDTH - M - 5,
+        ty + 40 * mm
     )
 
     # ===== TOTAL =====

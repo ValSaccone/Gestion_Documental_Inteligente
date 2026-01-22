@@ -1,9 +1,7 @@
 # yolo/factura_dataset.yaml
 
-# Ruta BASE del dataset.
-# La ruta '..' sube un nivel (de ML_module/ a Gestion_Documental_Inteligente/)
-# para encontrar la carpeta 'dataset_preprocesado'.
-path: ./dataset_dividido
+
+path: C:/Universidad/Quinto/PS/CodigoPS/Gestion_Documental_Inteligente/ML_module/dataset_dividido
 
 # Rutas a las imágenes de entrenamiento, validación y prueba.
 # Estas rutas son RELATIVAS a la ruta base definida en 'path'.
@@ -12,14 +10,13 @@ val: val/images      # Apunta a ../dataset_preprocesado/val/images
 test: test/images    # Apunta a ../dataset_preprocesado/test/images (Opcional)
 
 # Clases
-nc: 8
+nc: 7
 names: [
+    "tipo_factura",
+    "razon_social",
+    "cuit_emisor",
     "numero_factura",
     "fecha",
-    "cuit_emisor",
-    "razon_social",
-    "tipo_factura",
     "tabla_items",
-    "total",
-    "qr"
+    "total"
 ]
