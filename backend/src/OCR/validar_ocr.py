@@ -1,11 +1,10 @@
 # OCR/validar_ocr.py
-
 import os
 import csv
 import cv2
 
-from pipeline_detectar_yolo_ocr import procesar_factura_img
-from normalizar_ocr import NORMALIZADORES
+from OCR.pipeline_detectar_yolo_ocr import procesar_factura_img
+from OCR.normalizar_ocr import NORMALIZADORES
 
 
 # ----------------------------------------
@@ -13,7 +12,7 @@ from normalizar_ocr import NORMALIZADORES
 # ----------------------------------------
 
 def guardar_validacion(resultados, filename="validacion_ocr.csv"):
-    logs_dir = "./logs"
+    logs_dir = os.path.join(os.path.dirname(__file__), "logs")
     os.makedirs(logs_dir, exist_ok=True)
 
     ruta_salida = os.path.join(logs_dir, filename)
@@ -84,7 +83,7 @@ VALORES_ESPERADOS = {
 # ----------------------------------------
 
 def validar_facturas():
-    carpeta = "./facturas_prueba/"
+    carpeta = os.path.join(os.path.dirname(__file__), "facturas_prueba")
     archivos = [f for f in os.listdir(carpeta) if f.lower().endswith(".png")]
 
     resultados_log = []

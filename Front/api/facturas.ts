@@ -1,26 +1,36 @@
-const API_BASE_URL =  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 
-interface ProcessedData {
-  invoiceNumber: string
-  date: string
-  total: string
-  tax: string
-  provider: string
-  providerCuit: string
-  providerAddress: string
-  items: Array<{ description: string; quantity: string; unitPrice: string }>
+export interface TablaItem {
+  descripcion: string
+  cantidad: number
+  subtotal: number
 }
 
-interface Invoice {
-  id: string
-  invoiceNumber: string
-  date: string
-  total: string
-  provider: string
-  user: string
+export interface ProcessedData {
+  tipo_factura: string
+  razon_social: string
+  cuit_emisor: string
+  numero_factura: string
+  fecha: string
+  tabla_items: TablaItem[]
+  total: number
 }
 
+
+export interface Invoice {
+  id: number
+  tipo_factura: string
+  razon_social: string
+  cuit_emisor: string
+  numero_factura: string
+  fecha: string
+  tabla_items: TablaItem[]
+  total: number
+}
+
+
+// Subida de factura
 export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData> {
   const formData = new FormData()
   formData.append("file", file)
@@ -34,15 +44,28 @@ export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData
     throw new Error("Failed to upload and process invoice")
   }
 
-  return response.json()
+  const data: ProcessedData = await response.json()
+
+  // Aseguramos que tabla_items siempre sea un array de objetos
+  if (!Array.isArray(data.tabla_items)) {
+    data.tabla_items = []
+  }
+
+  return data
 }
 
-export async function confirmInvoice(data: ProcessedData, file: File): Promise<void> {
+// Confirmar factura (guardar en DB)
+export async function confirmInvoice(data: ProcessedData): Promise<void> {
   const payload = {
-    ...data,
-    fileName: file.name,
-    fileSize: file.size,
+    tipo_factura: data.tipo_factura,
+    razon_social: data.razon_social,
+    cuit_emisor: data.cuit_emisor,
+    numero_factura: data.numero_factura,
+    fecha: data.fecha,
+    tabla_items: data.tabla_items,
+    total: data.total
   }
+
 
   const response = await fetch(`${API_BASE_URL}/facturas`, {
     method: "POST",
@@ -57,13 +80,9 @@ export async function confirmInvoice(data: ProcessedData, file: File): Promise<v
   }
 }
 
+// Obtener facturas
 export async function getInvoices(): Promise<Invoice[]> {
-  const response = await fetch(`${API_BASE_URL}/facturas`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+  const response = await fetch(`${API_BASE_URL}/facturas`)
 
   if (!response.ok) {
     throw new Error("Failed to fetch invoices")
@@ -72,13 +91,8 @@ export async function getInvoices(): Promise<Invoice[]> {
   return response.json()
 }
 
-export async function getInvoiceById(id: string): Promise<ProcessedData> {
-  const response = await fetch(`${API_BASE_URL}/facturas/${id}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
+export async function getInvoiceById(id: number): Promise<Invoice> {
+  const response = await fetch(`${API_BASE_URL}/facturas/${id}`)
 
   if (!response.ok) {
     throw new Error("Failed to fetch invoice")

@@ -7,16 +7,20 @@ import { Button } from "@/components/ui/button"
 import FiltersBar from "@/components/filters-bar"
 import InvoiceTable from "@/components/invoice-table"
 import ExportButtons from "@/components/export-buttons"
-import { getInvoices } from "@/api/facturas"
+import {getInvoices} from "@/api/facturas"
+import {TablaItem} from "@/api/facturas"
 
 interface Invoice {
-  id: string
-  invoiceNumber: string
-  date: string
-  total: string
-  provider: string
-  user: string
+  id: number
+  tipo_factura: string
+  razon_social: string
+  cuit_emisor: string
+  numero_factura: string
+  fecha: string
+  tabla_items: TablaItem[]
+  total: number
 }
+
 
 interface InvoicesPageProps {
   onNavigate: (page: "upload" | "results" | "invoices") => void
@@ -41,7 +45,7 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
   const loadInvoices = async () => {
     setIsLoading(true)
     try {
-      const data = await getInvoices()
+      const data = await getInvoices() // ya viene con tipo correcto
       setInvoices(data)
     } catch (err) {
       console.error("Failed to load invoices:", err)
@@ -57,17 +61,19 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
     if (searchTerm) {
       filtered = filtered.filter(
         (inv) =>
-          inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          inv.provider.toLowerCase().includes(searchTerm.toLowerCase()),
+          inv.numero_factura.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inv.razon_social.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     if (dateFilter) {
-      filtered = filtered.filter((inv) => inv.date.startsWith(dateFilter))
+      filtered = filtered.filter((inv) => inv.fecha.startsWith(dateFilter))
     }
 
     if (providerFilter) {
-      filtered = filtered.filter((inv) => inv.provider.toLowerCase().includes(providerFilter.toLowerCase()))
+      filtered = filtered.filter((inv) =>
+        inv.razon_social.toLowerCase().includes(providerFilter.toLowerCase())
+      )
     }
 
     setFilteredInvoices(filtered)

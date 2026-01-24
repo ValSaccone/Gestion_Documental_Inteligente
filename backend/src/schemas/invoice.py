@@ -2,49 +2,39 @@ from pydantic import BaseModel
 from typing import List
 from datetime import date
 
-class ItemCreate(BaseModel):
+class TablaItemCreate(BaseModel):
     descripcion: str
     cantidad: int
-    precio_unitario: float
+    subtotal: float
+
+class TablaItemResponse(BaseModel):
+    descripcion: str
+    cantidad: int
+    subtotal: float
+
+    class Config:
+        from_attributes = True
+
 
 class InvoiceCreate(BaseModel):
-    numero: str
-    fecha: date | None
-    tipo_factura: str | None
+    tipo_factura: str
+    razon_social: str
+    cuit_emisor: str
+    numero_factura: str
+    fecha: str
+    tabla_items: list[TablaItemCreate]
     total: float
 
-    proveedor_id: int
-    usuario_id: int
-
-    detalles: List[ItemCreate]
-
-
-class ItemResponse(BaseModel):
-    descripcion: str
-    cantidad: int
-    precio_unitario: float
-
-    class Config:
-        from_attributes = True
-
-
-class ProveedorResponse(BaseModel):
-    nombre: str
-    cuit: str
-    direccion: str
-
-    class Config:
-        from_attributes = True
 
 class InvoiceResponse(BaseModel):
     id: int
-    numero: str
-    fecha: date | None
     tipo_factura: str | None
+    razon_social: str
+    cuit_emisor: str
+    numero_factura: str
+    fecha: str | None
+    tabla_items: list[TablaItemResponse]
     total: float
-
-    proveedor: ProveedorResponse
-    detalles: List[ItemResponse]
 
     class Config:
         from_attributes = True

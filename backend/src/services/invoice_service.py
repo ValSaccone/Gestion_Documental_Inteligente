@@ -2,63 +2,76 @@ from sqlalchemy.orm import Session
 from models.factura import Factura
 from models.proveedor import Proveedor
 from models.detalle_factura import DetalleFactura
+from datetime import datetime
 
-def factura_to_response(factura):
+
+def factura_to_response(factura: Factura):
     return {
         "id": factura.id,
-        "invoiceNumber": factura.numero,
-        "date": factura.fecha,
-        "total": factura.total,
-        "provider": factura.proveedor.nombre,
-        "providerCuit": factura.proveedor.cuit,
-        "providerAddress": factura.proveedor.direccion,
-        "items": [
+        "tipo_factura": factura.tipo_factura,
+        "razon_social": factura.proveedor.razon_social,
+        "cuit_emisor": factura.proveedor.cuit_emisor,
+        "numero_factura": factura.numero_factura,
+        "fecha": factura.fecha.strftime("%d/%m/%Y") if factura.fecha else None,
+        "tabla_items": [
             {
-                "description": d.descripcion,
-                "quantity": d.cantidad,
-                "unitPrice": d.precio_unitario
+                "descripcion": d.descripcion,
+                "cantidad": d.cantidad,
+                "subtotal": d.subtotal,
             }
             for d in factura.detalles
-        ]
+        ],
+        "total": factura.total,
     }
+
 
 
 def create_invoice(db: Session, data: dict):
     proveedor = (
         db.query(Proveedor)
-        .filter(Proveedor.cuit == data["providerCuit"])
+        .filter(Proveedor.cuit_emisor == data["cuit_emisor"])
         .first()
     )
 
     if not proveedor:
         proveedor = Proveedor(
-            nombre=data["provider"],
-            cuit=data["providerCuit"],
-            direccion=data["providerAddress"]
+            razon_social=data["razon_social"],
+            cuit_emisor=data["cuit_emisor"]
         )
         db.add(proveedor)
         db.commit()
         db.refresh(proveedor)
 
-    factura = Factura(
-        numero=data["invoiceNumber"],
-        total=data["total"],
-        proveedor_id=proveedor.id
-    )
+        fecha_str = data.get("fecha")
+
+        fecha = None
+        if fecha_str:
+            try:
+                fecha = datetime.strptime(fecha_str, "%d/%m/%Y").date()
+            except ValueError:
+                raise ValueError("Formato de fecha inválido, se espera dd/mm/aaaa")
+
+        factura = Factura(
+            numero_factura=data["numero_factura"],
+            fecha=fecha,
+            tipo_factura=data.get("tipo_factura"),
+            total=data["total"],
+            proveedor_id=proveedor.id
+        )
 
     db.add(factura)
     db.commit()
     db.refresh(factura)
 
-    for item in data["items"]:
+    for item in data.get("tabla_items", []):
         detalle = DetalleFactura(
-            descripcion=item["description"],
-            cantidad=item["quantity"],
-            precio_unitario=item["unitPrice"],
+            descripcion=item["descripcion"],
+            cantidad=item["cantidad"],
+            subtotal=item["subtotal"],
             factura_id=factura.id
         )
         db.add(detalle)
 
     db.commit()
+    db.refresh(factura)
     return factura
-

@@ -141,23 +141,50 @@ HEADERS_TABLA = [
 ]
 
 def normalizar_tabla_items(texto):
+    """
+    Convierte el string de items OCR en una lista de dicts con
+    descripcion, cantidad y subtotal.
+    """
     if not texto:
-        return ""
+        return []
 
-    t = texto
-
-    # eliminar encabezados aunque estén pegados
+    # Eliminar encabezados
     t = re.sub(
         r"producto\s*/?\s*servicio\s*cantidad\s*subtotal",
         "",
-        t,
+        texto,
         flags=re.IGNORECASE
     )
 
-    # limpiar espacios
+    # Limpiar espacios redundantes
     t = " ".join(t.split())
 
-    return t.strip()
+    # Detectar cada item por patrón: cantidad + subtotal al final
+
+    pattern = r"(.+?)\s+(\d+)\s+\$?([\d\.,]+)(?=\s|$)"
+    matches = re.findall(pattern, t)
+
+    items = []
+    for descripcion, cantidad, subtotal in matches:
+        descripcion = descripcion.strip()
+        try:
+            cantidad = int(cantidad)
+        except:
+            cantidad = 0
+        subtotal = subtotal.replace(".", "").replace(",", ".")
+        try:
+            subtotal = float(subtotal)
+        except:
+            subtotal = 0.0
+
+        items.append({
+            "descripcion": descripcion,
+            "cantidad": cantidad,
+            "subtotal": subtotal
+        })
+
+    return items
+
 
 # ============================================================
 # 2) TABLA DE NORMALIZADORES POR CAMPO

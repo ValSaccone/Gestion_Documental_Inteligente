@@ -1,6 +1,6 @@
 import re
-from detectar_recortar_ROIs import detectar_recortar_roi_img
-from lector_ocr import ocr_roi
+from OCR.detectar_recortar_ROIs import detectar_recortar_roi_img
+from OCR.lector_ocr import ocr_roi
 
 def extraer_tipo_factura(texto):
     texto = texto.upper()

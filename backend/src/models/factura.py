@@ -6,21 +6,20 @@ class Factura(Base):
     __tablename__ = "facturas"
 
     id = Column(Integer, primary_key=True)
-    numero = Column(String, nullable=False)
+    numero_factura = Column(String, nullable=False)
     fecha = Column(Date)
     tipo_factura = Column(String)
     total = Column(Float)
 
     proveedor_id = Column(Integer, ForeignKey("proveedores.id"))
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"))
 
     proveedor = relationship("Proveedor")
-    usuario = relationship("Usuario")
     detalles = relationship(
         "DetalleFactura",
         back_populates="factura",
         cascade="all, delete-orphan"
     )
+
 
 
 

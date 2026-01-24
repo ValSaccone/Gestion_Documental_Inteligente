@@ -1,74 +1,62 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { TablaItem } from "@/api/facturas"
 
-interface ProcessedData {
-  invoiceNumber: string
-  date: string
-  total: string
-  tax: string
-  provider: string
-  providerCuit: string
-  providerAddress: string
-  items: Array<{ description: string; quantity: string; unitPrice: string }>
+export interface BackendProcessedData {
+  tipo_factura: string
+  razon_social: string
+  cuit_emisor: string
+  numero_factura: string
+  fecha: string
+  tabla_items: TablaItem[]
+  total: number
 }
 
+
 interface InvoiceFormProps {
-  data: ProcessedData
-  onChange: (data: ProcessedData) => void
+  data: BackendProcessedData
+  onChange: (data: BackendProcessedData) => void
   isEditable: boolean
 }
 
 export default function InvoiceForm({ data, onChange, isEditable }: InvoiceFormProps) {
-  const handleChange = (field: keyof ProcessedData, value: any) => {
+  // Aseguramos que tabla_items nunca sea undefined
+  const tablaItems = data.tabla_items || []
+
+  const handleChange = (field: keyof BackendProcessedData, value: any) => {
     onChange({ ...data, [field]: value })
   }
 
-  const handleItemChange = (index: number, field: string, value: string) => {
-    const newItems = [...data.items]
+  const handleItemChange = (index: number, field: keyof TablaItem, value: string | number) => {
+    const newItems = [...tablaItems]
     newItems[index] = { ...newItems[index], [field]: value }
-    onChange({ ...data, items: newItems })
+    onChange({ ...data, tabla_items: newItems })
   }
 
   const InputField = ({
     label,
     value,
-    onChange: onChangeField,
+    onChange,
   }: {
     label: string
-    value: string
-    onChange: (value: string) => void
+    value: string | number
+    onChange: (val: string) => void
   }) => (
     <div className="space-y-1">
       <label className="text-sm font-medium text-foreground">{label}</label>
       <input
         type="text"
         value={value}
-        onChange={(e) => onChangeField(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         disabled={!isEditable}
         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:bg-muted"
       />
     </div>
   )
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 },
-    },
-  }
+  const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }
+  const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } }
 
   return (
     <motion.div
@@ -79,68 +67,51 @@ export default function InvoiceForm({ data, onChange, isEditable }: InvoiceFormP
     >
       {/* Invoice Header */}
       <motion.section variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Invoice Details</h2>
+        <h2 className="text-xl font-bold text-foreground">Detalles de la Factura</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <InputField
-            label="Invoice Number"
-            value={data.invoiceNumber}
-            onChange={(val) => handleChange("invoiceNumber", val)}
+            label="Número de Factura"
+            value={data.numero_factura}
+            onChange={(val) => handleChange("numero_factura", val)}
           />
-          <InputField label="Date" value={data.date} onChange={(val) => handleChange("date", val)} />
+          <InputField label="Fecha" value={data.fecha} onChange={(val) => handleChange("fecha", val)} />
         </div>
       </motion.section>
 
-      {/* Amounts */}
+      {/* Amount */}
       <motion.section variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Amounts</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InputField label="Total" value={data.total} onChange={(val) => handleChange("total", val)} />
-          <InputField label="Tax" value={data.tax} onChange={(val) => handleChange("tax", val)} />
-        </div>
+        <h2 className="text-xl font-bold text-foreground">Montos</h2>
+        <InputField label="Total" value={data.total} onChange={(val) => handleChange("total", val)} />
       </motion.section>
 
       {/* Provider */}
       <motion.section variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Provider</h2>
-        <div className="space-y-4">
-          <InputField label="Provider Name" value={data.provider} onChange={(val) => handleChange("provider", val)} />
-          <InputField label="CUIT" value={data.providerCuit} onChange={(val) => handleChange("providerCuit", val)} />
-          <InputField
-            label="Address"
-            value={data.providerAddress}
-            onChange={(val) => handleChange("providerAddress", val)}
-          />
-        </div>
+        <h2 className="text-xl font-bold text-foreground">Proveedor</h2>
+        <InputField label="Razón Social" value={data.razon_social} onChange={(val) => handleChange("razon_social", val)} />
+        <InputField label="CUIT" value={data.cuit_emisor} onChange={(val) => handleChange("cuit_emisor", val)} />
       </motion.section>
+
 
       {/* Items */}
       <motion.section variants={itemVariants} className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Line Items</h2>
-        <div className="space-y-4">
-          {data.items.map((item, index) => (
-            <motion.div key={index} variants={itemVariants} className="rounded-lg border border-border p-4 space-y-3">
-              <p className="text-sm font-medium text-muted-foreground">Item {index + 1}</p>
-              <InputField
-                label="Description"
-                value={item.description}
-                onChange={(val) => handleItemChange(index, "description", val)}
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <InputField
-                  label="Quantity"
-                  value={item.quantity}
-                  onChange={(val) => handleItemChange(index, "quantity", val)}
-                />
-                <InputField
-                  label="Unit Price"
-                  value={item.unitPrice}
-                  onChange={(val) => handleItemChange(index, "unitPrice", val)}
-                />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <h2 className="text-xl font-bold text-foreground">Items</h2>
+        {(data.tabla_items || [])?.map((item, idx) => (
+          <motion.div key={idx} variants={itemVariants} className="rounded-lg border border-border p-4 space-y-3">
+            <InputField
+              label="Descripción"
+              value={item.descripcion}
+              onChange={(val) => handleItemChange(idx, "descripcion", val)}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <InputField label="Cantidad" value={item.cantidad} onChange={(val) => handleItemChange(idx, "cantidad", val)} />
+              <InputField label="Subtotal" value={item.subtotal} onChange={(val) => handleItemChange(idx, "subtotal", val)} />
+            </div>
+          </motion.div>
+        ))}
       </motion.section>
     </motion.div>
   )
 }
+
+
+

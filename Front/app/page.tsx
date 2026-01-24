@@ -10,14 +10,17 @@ import InvoicesPage from "@/components/pages/invoices-page"
 type PageType = "upload" | "results" | "invoices"
 
 interface ProcessedData {
-  invoiceNumber: string
-  date: string
-  total: string
-  tax: string
-  provider: string
-  providerCuit: string
-  providerAddress: string
-  items: Array<{ description: string; quantity: string; unitPrice: string }>
+  tipo_factura: string
+  razon_social: string
+  cuit_emisor: string
+  numero_factura: string
+  fecha: string
+  tabla_items: Array<{
+    descripcion: string
+    cantidad: number
+    subtotal: number
+  }>
+    total: number
 }
 
 export default function Home() {
@@ -26,6 +29,7 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
   const handleFileUpload = (file: File, data: ProcessedData) => {
+    // Aquí ya tenemos la data del backend, entonces podemos navegar a results
     setUploadedFile(file)
     setProcessedData(data)
     navigateTo("results")
@@ -53,10 +57,19 @@ export default function Home() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-      {currentPage === "upload" && <UploadPage onFileUpload={handleFileUpload} onNavigate={handleNavigate} />}
-      {currentPage === "results" && processedData && uploadedFile && (
-        <ResultsPage data={processedData} file={uploadedFile} onConfirm={handleConfirm} onCancel={handleCancel} />
+      {currentPage === "upload" && (
+        <UploadPage onFileUpload={handleFileUpload} onNavigate={handleNavigate} />
       )}
+
+      {/* Render condicional: ResultsPage solo se monta si tenemos processedData */}
+      {currentPage === "results" && processedData && (
+        <ResultsPage
+          data={processedData} // Siempre definido, nunca null
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      )}
+
       {currentPage === "invoices" && <InvoicesPage onNavigate={handleNavigate} />}
     </motion.div>
   )

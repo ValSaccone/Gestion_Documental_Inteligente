@@ -1,73 +1,59 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.orm import Session
-from db.session import get_db
-from services.ocr_service import process_invoice
-from schemas.invoice import InvoiceResponse, InvoiceCreate
-from models import Factura, DetalleFactura
-from fastapi import UploadFile, File, Depends
 import numpy as np
 import cv2
+
+from db.session import get_db
 from services.ocr_service import process_invoice_img
+from services.invoice_service import create_invoice, factura_to_response
+from schemas.invoice import InvoiceResponse, InvoiceCreate
+from models import Factura
 
 
 #Router
-router = APIRouter(prefix="/invoices")
+router = APIRouter(prefix="/facturas")
 
-@router.post("/process")
-async def process_invoice_endpoint(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
+@router.post("/upload")
+async def upload_factura(file: UploadFile = File(...)):
     contents = await file.read()
 
-    # Convertir bytes a imagen OpenCV
-    img_array = np.frombuffer(contents, np.uint8)
-    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+    img = cv2.imdecode(
+        np.frombuffer(contents, np.uint8),
+        cv2.IMREAD_COLOR
+    )
 
     if img is None:
         raise HTTPException(status_code=400, detail="Imagen inválida")
 
-    data = process_invoice_img(img)
-    return data
+    resultado = process_invoice_img(img, file.filename)
 
+    # Ahora tabla_items ya es un array de dicts
+    tabla_items_list = resultado.get("tabla_items", [])
 
-@router.post(
-    "/",
-    response_model=InvoiceResponse,
-    status_code=201
-)
+    # Normalizar salida para el frontend
+    return {
+        "tipo_factura": resultado.get("tipo_factura", ""),
+        "razon_social": resultado.get("razon_social", ""),
+        "cuit_emisor": resultado.get("cuit_emisor", ""),
+        "numero_factura": resultado.get("numero_factura", ""),
+        "fecha": resultado.get("fecha", ""),
+        "tabla_items": tabla_items_list,
+        "total": resultado.get("total", 0.0),
+    }
+
+@router.post("/", response_model=InvoiceResponse, status_code=201)
 def create_invoice_endpoint(
     data: InvoiceCreate,
     db: Session = Depends(get_db)
 ):
-    factura = Factura(
-        numero=data.numero,
-        fecha=data.fecha,
-        tipo_factura=data.tipo_factura,
-        total=data.total,
-        proveedor_id=data.proveedor_id,
-        usuario_id=data.usuario_id,
-    )
-
-    for item in data.detalles:
-        factura.detalles.append(
-            DetalleFactura(
-                descripcion=item.descripcion,
-                cantidad=item.cantidad,
-                precio_unitario=item.precio_unitario
-            )
-        )
-
-    db.add(factura)
-    db.commit()
-    db.refresh(factura)
-
-    return factura
+    factura = create_invoice(db, data.dict())
+    return factura_to_response(factura)
 
 
 @router.get("/", response_model=list[InvoiceResponse])
 def list_invoices(db: Session = Depends(get_db)):
-    return db.query(Factura).all()
+    facturas = db.query(Factura).all()
+    return [factura_to_response(f) for f in facturas]
 
 
 @router.get("/{invoice_id}", response_model=InvoiceResponse)
@@ -77,5 +63,6 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
     if not factura:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-    return factura
+    return factura_to_response(factura)
+
 

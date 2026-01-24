@@ -4,37 +4,25 @@ import { motion } from "framer-motion"
 import { Download, FileJson } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-
-interface Invoice {
-  id: string
-  invoiceNumber: string
-  date: string
-  total: string
-  provider: string
-  user: string
-}
+import { Invoice } from "@/api/facturas"
 
 interface ExportButtonsProps {
   invoices: Invoice[]
 }
 
-export default function ExportButtons({ invoices }: ExportButtonsProps) {
+export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
   const { toast } = useToast()
 
   const exportToCSV = () => {
-    if (invoices.length === 0) {
-      toast({
-        title: "No data",
-        description: "There are no invoices to export",
-        variant: "destructive",
-      })
+    if (!invoices || invoices.length === 0) {
+      toast({ title: "No data", description: "There are no invoices to export", variant: "destructive" })
       return
     }
 
-    const headers = ["Invoice Number", "Date", "Provider", "User", "Total"]
-    const rows = invoices.map((inv) => [inv.invoiceNumber, inv.date, inv.provider, inv.user, inv.total])
+    const headers = ["Invoice Number", "Date", "Provider", "CUIT", "Total"]
+    const rows = invoices?.map((inv) => [inv.numero_factura, inv.fecha, inv.razon_social, inv.cuit_emisor, inv.total])
 
-    const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join("\n")
+    const csv = [headers.join(","), ...rows?.map((row) => row.join(","))].join("\n")
 
     const blob = new Blob([csv], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
@@ -43,26 +31,11 @@ export default function ExportButtons({ invoices }: ExportButtonsProps) {
     a.download = `invoices-${new Date().toISOString().split("T")[0]}.csv`
     a.click()
 
-    toast({
-      title: "Success",
-      description: "Invoices exported to CSV",
-    })
+    toast({ title: "Success", description: "Invoices exported to CSV" })
   }
 
-  const exportToPDF = async () => {
-    if (invoices.length === 0) {
-      toast({
-        title: "No data",
-        description: "There are no invoices to export",
-        variant: "destructive",
-      })
-      return
-    }
-
-    toast({
-      title: "Processing",
-      description: "PDF generation not yet implemented. Contact backend API.",
-    })
+  const exportToPDF = () => {
+    toast({ title: "Processing", description: "PDF generation not yet implemented" })
   }
 
   return (
@@ -78,3 +51,5 @@ export default function ExportButtons({ invoices }: ExportButtonsProps) {
     </motion.div>
   )
 }
+
+

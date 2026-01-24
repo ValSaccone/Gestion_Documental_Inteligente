@@ -34,7 +34,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
+            {navItems?.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleNavigate(item.action)}
@@ -58,7 +58,7 @@ export default function Header() {
             animate={{ opacity: 1, y: 0 }}
             className="md:hidden pb-4 space-y-2"
           >
-            {navItems.map((item) => (
+            {navItems?.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleNavigate(item.action)}
