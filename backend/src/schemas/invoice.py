@@ -100,7 +100,7 @@ class InvoiceCreate(BaseModel):
             raise ValueError("El total no puede ser negativo")
         return v
 
-    # ✅ VALIDACIÓN CRUZADA
+    # VALIDACIÓN CRUZADA
     @model_validator(mode="after")
     def validar_total(self):
         suma = sum(item.subtotal for item in self.tabla_items)

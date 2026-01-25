@@ -6,7 +6,7 @@ class Factura(Base):
     __tablename__ = "facturas"
 
     id = Column(Integer, primary_key=True)
-    numero_factura = Column(String, nullable=False)
+    numero_factura = Column(String, unique=True, nullable=False)
     fecha = Column(Date)
     tipo_factura = Column(String)
     total = Column(Float)
