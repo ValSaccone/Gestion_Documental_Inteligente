@@ -4,9 +4,34 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import InvoiceForm from "../invoice-form"
+// import InvoiceForm from "../invoice-form"
 import { confirmInvoice, TablaItem } from "@/api/facturas"
+
+interface InputFieldProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  error?: string
+  type?: string
+}
+
+function InputField({ label, value, onChange, error, type = "text" }: InputFieldProps) {
+  return (
+    <div className="space-y-1">
+      <Label>{label}</Label>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={error ? "border-red-500" : ""}
+      />
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  )
+}
 
 export interface BackendProcessedData {
   tipo_factura: string
@@ -30,6 +55,19 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
+  const handleChange = (field: keyof BackendProcessedData, value: any) => {
+      setClientData((prev) => prev ? { ...prev, [field]: value } : null);
+  }
+
+  const handleItemChange = (index: number, field: keyof TablaItem, value: string | number) => {
+      setClientData((prev) => {
+        if (!prev) return null;
+        const newItems = [...prev.tabla_items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        return { ...prev, tabla_items: newItems };
+      });
+  }
+
   const handleConfirm = async () => {
     if (!clientData) return
 
@@ -37,6 +75,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
     setErrors({})
 
     try {
+      console.log(clientData)
       await confirmInvoice(clientData)
       toast({ title: "Éxito", description: "Factura registrada correctamente" })
       onConfirm()
@@ -123,12 +162,76 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
           </p>
         </motion.div>
 
-        <InvoiceForm
-          data={clientData}
-          onChange={setClientData}
-          isEditable={true}
-          errors={errors}
-        />
+        {/*<InvoiceForm*/}
+        {/*  data={clientData}*/}
+        {/*  onChange={setClientData}*/}
+        {/*  isEditable={true}*/}
+        {/*  errors={errors}*/}
+        {/*/>*/}
+
+        <motion.div className="space-y-8 rounded-lg border p-6 bg-white shadow-sm">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InputField
+              label="Número de Factura"
+              value={clientData.numero_factura}
+              onChange={(val) => handleChange("numero_factura", val)}
+              error={errors.numero_factura}
+            />
+            <InputField
+              label="Fecha"
+              value={clientData.fecha}
+              onChange={(val) => handleChange("fecha", val)}
+              error={errors.fecha}
+            />
+          </div>
+
+          <InputField
+            label="Total"
+            type="number"
+            value={String(clientData.total)}
+            onChange={(val) => handleChange("total", Number(val))}
+            error={errors.total}
+          />
+
+          <InputField
+            label="Razón Social"
+            value={clientData.razon_social}
+            onChange={(val) => handleChange("razon_social", val)}
+            error={errors.razon_social}
+          />
+
+          <InputField
+            label="CUIT"
+            value={clientData.cuit_emisor}
+            onChange={(val) => handleChange("cuit_emisor", val)}
+            error={errors.cuit_emisor}
+          />
+
+          {clientData.tabla_items.map((item, idx) => (
+            <div key={idx} className="border p-4 rounded space-y-2">
+              <InputField
+                label="Descripción"
+                value={item.descripcion}
+                onChange={(val) => handleItemChange(idx, "descripcion", val)}
+                error={errors[`tabla_items.${idx}.descripcion`]}
+              />
+              <InputField
+                label="Cantidad"
+                type="number"
+                value={String(item.cantidad)}
+                onChange={(val) => handleItemChange(idx, "cantidad", Number(val))}
+                error={errors[`tabla_items.${idx}.cantidad`]}
+              />
+              <InputField
+                label="Subtotal"
+                type="number"
+                value={String(item.subtotal)}
+                onChange={(val) => handleItemChange(idx, "subtotal", Number(val))}
+                error={errors[`tabla_items.${idx}.subtotal`]}
+              />
+            </div>
+          ))}
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

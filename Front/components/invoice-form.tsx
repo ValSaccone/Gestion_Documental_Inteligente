@@ -21,6 +21,41 @@ interface InvoiceFormProps {
   errors: Record<string, string>
 }
 
+// InputField defined OUTSIDE InvoiceForm to prevent re-creation on each render
+interface InputFieldProps {
+  label: string
+  value: string | number
+  onChange: (val: string) => void
+  type?: string
+  error?: string
+  disabled?: boolean
+}
+
+function InputField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  error,
+  disabled = false,
+}: InputFieldProps) {
+  return (
+    <div className="space-y-1">
+      <label className="text-sm font-medium">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className={`w-full rounded-lg px-3 py-2 text-sm border 
+          ${error ? "border-red-500 bg-red-50" : "border-border"}
+        `}
+      />
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </div>
+  )
+}
+
 export default function InvoiceForm({ data, onChange, isEditable, errors }: InvoiceFormProps) {
   const [localData, setLocalData] = useState<BackendProcessedData>(data)
 
@@ -42,34 +77,6 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
     })
   }
 
-  const InputField = ({
-    label,
-    value,
-    onChange,
-    type = "text",
-    error,
-  }: {
-    label: string
-    value: string | number
-    onChange: (val: string) => void
-    type?: string
-    error?: string
-  }) => (
-    <div className="space-y-1">
-      <label className="text-sm font-medium">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={!isEditable}
-        className={`w-full rounded-lg px-3 py-2 text-sm border 
-          ${error ? "border-red-500 bg-red-50" : "border-border"}
-        `}
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-    </div>
-  )
-
   return (
     <motion.div className="space-y-8 rounded-lg border p-6 bg-white shadow-sm">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -78,12 +85,14 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
           value={localData.numero_factura}
           onChange={(val) => handleChange("numero_factura", val)}
           error={errors.numero_factura}
+          disabled={!isEditable}
         />
         <InputField
           label="Fecha"
           value={localData.fecha}
           onChange={(val) => handleChange("fecha", val)}
           error={errors.fecha}
+          disabled={!isEditable}
         />
       </div>
 
@@ -93,6 +102,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
         value={String(localData.total)}
         onChange={(val) => handleChange("total", Number(val))}
         error={errors.total}
+        disabled={!isEditable}
       />
 
       <InputField
@@ -100,6 +110,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
         value={localData.razon_social}
         onChange={(val) => handleChange("razon_social", val)}
         error={errors.razon_social}
+        disabled={!isEditable}
       />
 
       <InputField
@@ -107,6 +118,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
         value={localData.cuit_emisor}
         onChange={(val) => handleChange("cuit_emisor", val)}
         error={errors.cuit_emisor}
+        disabled={!isEditable}
       />
 
       {localData.tabla_items.map((item, idx) => (
@@ -116,6 +128,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
             value={item.descripcion}
             onChange={(val) => handleItemChange(idx, "descripcion", val)}
             error={errors[`tabla_items.${idx}.descripcion`]}
+            disabled={!isEditable}
           />
           <InputField
             label="Cantidad"
@@ -123,6 +136,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
             value={String(item.cantidad)}
             onChange={(val) => handleItemChange(idx, "cantidad", Number(val))}
             error={errors[`tabla_items.${idx}.cantidad`]}
+            disabled={!isEditable}
           />
           <InputField
             label="Subtotal"
@@ -130,6 +144,7 @@ export default function InvoiceForm({ data, onChange, isEditable, errors }: Invo
             value={String(item.subtotal)}
             onChange={(val) => handleItemChange(idx, "subtotal", Number(val))}
             error={errors[`tabla_items.${idx}.subtotal`]}
+            disabled={!isEditable}
           />
         </div>
       ))}

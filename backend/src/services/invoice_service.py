@@ -35,7 +35,7 @@ def create_invoice(db: Session, data: dict):
 
     proveedor = (
         db.query(Proveedor)
-        .filter(Proveedor.cuit_emisor == data["cuit_emisor"])
+        .filter(Proveedor.cuit_emisor == data["cuit_emisor"], Proveedor.razon_social == data["razon_social"])
         .first()
     )
 
