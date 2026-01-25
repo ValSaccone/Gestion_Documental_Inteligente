@@ -1,6 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-
 export interface TablaItem {
   descripcion: string
   cantidad: number
@@ -17,7 +16,6 @@ export interface ProcessedData {
   total: number
 }
 
-
 export interface Invoice {
   id: number
   tipo_factura: string
@@ -29,8 +27,9 @@ export interface Invoice {
   total: number
 }
 
-
-// Subida de factura
+// =======================
+// Subida de factura (OCR)
+// =======================
 export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData> {
   const formData = new FormData()
   formData.append("file", file)
@@ -46,7 +45,6 @@ export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData
 
   const data: ProcessedData = await response.json()
 
-
   if (!Array.isArray(data.tabla_items)) {
     data.tabla_items = []
   }
@@ -54,18 +52,28 @@ export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData
   return data
 }
 
-// Confirmar factura (guardar en DB)
+// =======================
+// Confirmar factura (DB)
+// =======================
 export async function confirmInvoice(data: ProcessedData): Promise<void> {
+
   const payload = {
-    tipo_factura: data.tipo_factura,
-    razon_social: data.razon_social,
-    cuit_emisor: data.cuit_emisor,
-    numero_factura: data.numero_factura,
-    fecha: data.fecha,
-    tabla_items: data.tabla_items,
-    total: data.total
+    tipo_factura: data.tipo_factura?.trim() || "",
+    razon_social: data.razon_social?.trim() || "",
+    cuit_emisor: data.cuit_emisor ? data.cuit_emisor.replace(/\D/g, "") : "",
+    numero_factura: data.numero_factura?.trim() || "",
+    fecha: data.fecha?.trim() || "",
+
+    tabla_items: data.tabla_items.map(item => ({
+      descripcion: item.descripcion?.trim() || "",
+      cantidad: Number(item.cantidad),
+      subtotal: Number(item.subtotal),
+    })),
+
+    total: Number(data.total),
   }
 
+  console.log("Payload enviado:", payload)
 
   const response = await fetch(`${API_BASE_URL}/facturas`, {
     method: "POST",
@@ -76,11 +84,15 @@ export async function confirmInvoice(data: ProcessedData): Promise<void> {
   })
 
   if (!response.ok) {
-    throw new Error("Failed to confirm invoice")
+    const err = await response.text()
+    console.error("Error backend:", err)
+    throw new Error(err)
   }
 }
 
+// =======================
 // Obtener facturas
+// =======================
 export async function getInvoices(): Promise<Invoice[]> {
   const response = await fetch(`${API_BASE_URL}/facturas`)
 
@@ -101,6 +113,9 @@ export async function getInvoiceById(id: number): Promise<Invoice> {
   return response.json()
 }
 
+// =======================
+// Exportar facturas
+// =======================
 export async function exportInvoices(format: "pdf" | "csv"): Promise<Blob> {
   const response = await fetch(`${API_BASE_URL}/facturas/export?format=${format}`, {
     method: "GET",

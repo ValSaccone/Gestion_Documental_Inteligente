@@ -3,6 +3,9 @@ from models.factura import Factura
 from models.proveedor import Proveedor
 from models.detalle_factura import DetalleFactura
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+
+from shared.errores import ServiceError, ResponseErrors
 
 
 def factura_to_response(factura: Factura):
@@ -25,8 +28,11 @@ def factura_to_response(factura: Factura):
     }
 
 
-
 def create_invoice(db: Session, data: dict):
+
+    fecha_str = data.get("fecha")
+    fecha = datetime.strptime(fecha_str, "%d/%m/%Y").date() if fecha_str else None
+
     proveedor = (
         db.query(Proveedor)
         .filter(Proveedor.cuit_emisor == data["cuit_emisor"])
@@ -42,15 +48,7 @@ def create_invoice(db: Session, data: dict):
         db.commit()
         db.refresh(proveedor)
 
-        fecha_str = data.get("fecha")
-
-        fecha = None
-        if fecha_str:
-            try:
-                fecha = datetime.strptime(fecha_str, "%d/%m/%Y").date()
-            except ValueError:
-                raise ValueError("Formato de fecha inválido, se espera dd/mm/aaaa")
-
+    try:
         factura = Factura(
             numero_factura=data["numero_factura"],
             fecha=fecha,
@@ -59,19 +57,28 @@ def create_invoice(db: Session, data: dict):
             proveedor_id=proveedor.id
         )
 
-    db.add(factura)
-    db.commit()
-    db.refresh(factura)
+        db.add(factura)
+        db.commit()
+        db.refresh(factura)
 
-    for item in data.get("tabla_items", []):
-        detalle = DetalleFactura(
-            descripcion=item["descripcion"],
-            cantidad=item["cantidad"],
-            subtotal=item["subtotal"],
-            factura_id=factura.id
-        )
-        db.add(detalle)
+        for item in data.get("tabla_items", []):
+            detalle = DetalleFactura(
+                descripcion=item["descripcion"],
+                cantidad=item["cantidad"],
+                subtotal=item["subtotal"],
+                factura_id=factura.id
+            )
+            db.add(detalle)
 
-    db.commit()
-    db.refresh(factura)
+        db.commit()
+        db.refresh(factura)
+
+    except IntegrityError:
+        db.rollback()
+        raise ServiceError(ResponseErrors.DATOS_DUPLICADOS, "Factura duplicada")
+
+    except Exception as e:
+        db.rollback()
+        raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
+
     return factura

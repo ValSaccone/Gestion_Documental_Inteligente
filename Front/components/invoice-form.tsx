@@ -18,10 +18,10 @@ interface InvoiceFormProps {
   data: BackendProcessedData
   onChange: (data: BackendProcessedData) => void
   isEditable: boolean
+  errors: Record<string, string>
 }
 
-export default function InvoiceForm({ data, onChange, isEditable }: InvoiceFormProps) {
-
+export default function InvoiceForm({ data, onChange, isEditable, errors }: InvoiceFormProps) {
   const [localData, setLocalData] = useState<BackendProcessedData>(data)
 
   const handleChange = (field: keyof BackendProcessedData, value: any) => {
@@ -47,96 +47,92 @@ export default function InvoiceForm({ data, onChange, isEditable }: InvoiceFormP
     value,
     onChange,
     type = "text",
+    error,
   }: {
     label: string
     value: string | number
     onChange: (val: string) => void
     type?: string
+    error?: string
   }) => (
     <div className="space-y-1">
-      <label className="text-sm font-medium text-foreground">{label}</label>
+      <label className="text-sm font-medium">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={!isEditable}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:bg-muted"
+        className={`w-full rounded-lg px-3 py-2 text-sm border 
+          ${error ? "border-red-500 bg-red-50" : "border-border"}
+        `}
       />
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   )
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="space-y-8 rounded-lg border border-border bg-white p-6 shadow-sm">
-      {/* Factura Header */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Detalles de la Factura</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+    <motion.div className="space-y-8 rounded-lg border p-6 bg-white shadow-sm">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <InputField
+          label="Número de Factura"
+          value={localData.numero_factura}
+          onChange={(val) => handleChange("numero_factura", val)}
+          error={errors.numero_factura}
+        />
+        <InputField
+          label="Fecha"
+          value={localData.fecha}
+          onChange={(val) => handleChange("fecha", val)}
+          error={errors.fecha}
+        />
+      </div>
+
+      <InputField
+        label="Total"
+        type="number"
+        value={String(localData.total)}
+        onChange={(val) => handleChange("total", Number(val))}
+        error={errors.total}
+      />
+
+      <InputField
+        label="Razón Social"
+        value={localData.razon_social}
+        onChange={(val) => handleChange("razon_social", val)}
+        error={errors.razon_social}
+      />
+
+      <InputField
+        label="CUIT"
+        value={localData.cuit_emisor}
+        onChange={(val) => handleChange("cuit_emisor", val)}
+        error={errors.cuit_emisor}
+      />
+
+      {localData.tabla_items.map((item, idx) => (
+        <div key={idx} className="border p-4 rounded space-y-2">
           <InputField
-            label="Número de Factura"
-            value={localData.numero_factura}
-            onChange={(val) => handleChange("numero_factura", val)}
+            label="Descripción"
+            value={item.descripcion}
+            onChange={(val) => handleItemChange(idx, "descripcion", val)}
+            error={errors[`tabla_items.${idx}.descripcion`]}
           />
           <InputField
-            label="Fecha"
-            value={localData.fecha}
-            onChange={(val) => handleChange("fecha", val)}
+            label="Cantidad"
+            type="number"
+            value={String(item.cantidad)}
+            onChange={(val) => handleItemChange(idx, "cantidad", Number(val))}
+            error={errors[`tabla_items.${idx}.cantidad`]}
+          />
+          <InputField
+            label="Subtotal"
+            type="number"
+            value={String(item.subtotal)}
+            onChange={(val) => handleItemChange(idx, "subtotal", Number(val))}
+            error={errors[`tabla_items.${idx}.subtotal`]}
           />
         </div>
-      </div>
-
-      {/* Monto */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Monto Total</h2>
-        <InputField
-          label="Total"
-          type="number"
-          value={String(localData.total)}
-          onChange={(val) => handleChange("total", Number(val))}
-        />
-      </div>
-
-      {/* Proveedor */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Proveedor</h2>
-        <InputField
-          label="Razón Social"
-          value={localData.razon_social}
-          onChange={(val) => handleChange("razon_social", val)}
-        />
-        <InputField
-          label="CUIT"
-          value={localData.cuit_emisor}
-          onChange={(val) => handleChange("cuit_emisor", val)}
-        />
-      </div>
-
-      {/* Tabla items (detalle factura) */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-foreground">Detalle</h2>
-        {localData.tabla_items.map((item, idx) => (
-          <div key={item.descripcion + idx} className="rounded-lg border border-border p-4 space-y-3">
-            <InputField
-              label="Descripción"
-              value={item.descripcion}
-              onChange={(val) => handleItemChange(idx, "descripcion", val)}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <InputField
-                label="Cantidad"
-                type="number"
-                value={String(item.cantidad)}
-                onChange={(val) => handleItemChange(idx, "cantidad", Number(val))}
-              />
-              <InputField
-                label="Subtotal"
-                type="number"
-                value={String(item.subtotal)}
-                onChange={(val) => handleItemChange(idx, "subtotal", Number(val))}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+      ))}
     </motion.div>
   )
 }

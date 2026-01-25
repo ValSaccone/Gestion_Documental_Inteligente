@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 import numpy as np
 import cv2
@@ -13,20 +13,22 @@ from PIL import Image
 from pdf2image import convert_from_bytes
 import io
 
-#Router
+from shared.errores import ServiceError, raise_service_error, ResponseErrors
+
 router = APIRouter(prefix="/facturas")
+
 
 @router.post("/upload")
 async def upload_factura(file: UploadFile = File(...)):
     contents = await file.read()
     filename = file.filename.lower()
 
-    # --- Convertir PDF o JPG/JPEG a PNG ---
     if filename.endswith((".jpg", ".jpeg")):
         pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
         buf = io.BytesIO()
         pil_img.save(buf, format="PNG")
         contents = buf.getvalue()
+
     elif filename.endswith(".pdf"):
         try:
             pages = convert_from_bytes(contents, dpi=300)
@@ -34,8 +36,8 @@ async def upload_factura(file: UploadFile = File(...)):
             buf = io.BytesIO()
             pil_img.save(buf, format="PNG")
             contents = buf.getvalue()
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Error al procesar PDF: {str(e)}")
+        except Exception:
+            raise_service_error(ResponseErrors.PDF_INVALIDO)
 
     img = cv2.imdecode(
         np.frombuffer(contents, np.uint8),
@@ -43,11 +45,9 @@ async def upload_factura(file: UploadFile = File(...)):
     )
 
     if img is None:
-        raise HTTPException(status_code=400, detail="Imagen inválida")
+        raise_service_error(ResponseErrors.IMAGEN_INVALIDA)
 
     resultado = process_invoice_img(img, file.filename)
-
-    tabla_items_list = resultado.get("tabla_items", [])
 
     return {
         "tipo_factura": resultado.get("tipo_factura", ""),
@@ -55,16 +55,21 @@ async def upload_factura(file: UploadFile = File(...)):
         "cuit_emisor": resultado.get("cuit_emisor", ""),
         "numero_factura": resultado.get("numero_factura", ""),
         "fecha": resultado.get("fecha", ""),
-        "tabla_items": tabla_items_list,
+        "tabla_items": resultado.get("tabla_items", []),
         "total": resultado.get("total", 0.0),
     }
+
+
 @router.post("/", response_model=InvoiceResponse, status_code=201)
 def create_invoice_endpoint(
     data: InvoiceCreate,
     db: Session = Depends(get_db)
 ):
-    factura = create_invoice(db, data.dict())
-    return factura_to_response(factura)
+    try:
+        factura = create_invoice(db, data.dict())
+        return factura_to_response(factura)
+    except ServiceError as e:
+        raise_service_error(e.error_key, e.detail)
 
 
 @router.get("/", response_model=list[InvoiceResponse])
@@ -78,8 +83,6 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
     factura = db.query(Factura).filter(Factura.id == invoice_id).first()
 
     if not factura:
-        raise HTTPException(status_code=404, detail="Factura no encontrada")
+        raise_service_error(ResponseErrors.NO_ENCONTRADO)
 
     return factura_to_response(factura)
-
-

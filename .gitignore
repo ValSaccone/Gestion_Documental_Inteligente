@@ -3,6 +3,10 @@ practica_supervisada/
 database/
 backend/database
 backend/.idea
+backend/src/OCR/temp_rois
+backend/src/OCR/logs
+backend/src/OCR/facturas_prueba
+backend/alembic/versions
 
 # Ignorar archivos temporales
 *.log
