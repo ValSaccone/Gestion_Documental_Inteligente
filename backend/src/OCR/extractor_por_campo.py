@@ -1,4 +1,3 @@
-# OCR/extractor_por_campo.py
 import re
 
 def extraer_por_campo(campo, texto):

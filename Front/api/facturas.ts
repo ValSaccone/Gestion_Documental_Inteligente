@@ -46,7 +46,7 @@ export async function uploadAndProcessInvoice(file: File): Promise<ProcessedData
 
   const data: ProcessedData = await response.json()
 
-  // Aseguramos que tabla_items siempre sea un array de objetos
+
   if (!Array.isArray(data.tabla_items)) {
     data.tabla_items = []
   }

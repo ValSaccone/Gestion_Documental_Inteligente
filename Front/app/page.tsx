@@ -29,7 +29,6 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
   const handleFileUpload = (file: File, data: ProcessedData) => {
-    // Aquí ya tenemos la data del backend, entonces podemos navegar a results
     setUploadedFile(file)
     setProcessedData(data)
     navigateTo("results")
@@ -61,10 +60,10 @@ export default function Home() {
         <UploadPage onFileUpload={handleFileUpload} onNavigate={handleNavigate} />
       )}
 
-      {/* Render condicional: ResultsPage solo se monta si tenemos processedData */}
+      {/* Render condicional*/}
       {currentPage === "results" && processedData && (
         <ResultsPage
-          data={processedData} // Siempre definido, nunca null
+          data={processedData}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />

@@ -1,26 +1,21 @@
-# OCR/normalizar_ocr.py
-
 import csv
 import os
 import re
 import datetime
-
 
 # ============================================================
 # 1) FUNCIONES DE NORMALIZACIÓN
 # ============================================================
 
 def normalizar_cuit(texto):
-    """
-    Extrae CUIT aunque venga con basura OCR.
-    Devuelve formato XX-XXXXXXXX-X si es posible.
-    """
+
+   # Extrae CUIT, devuelve formato XX-XXXXXXXX-X.
+
     if not texto:
         return ""
 
     digits = re.sub(r"\D", "", texto)
 
-    # algunos OCR pierden un dígito inicial → no inventamos
     if len(digits) == 11:
         return f"{digits[0:2]}-{digits[2:10]}-{digits[10]}"
 
@@ -28,10 +23,9 @@ def normalizar_cuit(texto):
 
 
 def normalizar_fecha(texto):
-    """
-    Detecta fechas aunque tengan texto alrededor.
-    Convierte a DD/MM/YYYY.
-    """
+
+    # Convierte a DD/MM/AAAA
+
     if not texto:
         return ""
 
@@ -55,10 +49,7 @@ def normalizar_fecha(texto):
 
 
 def normalizar_total(texto):
-    """
-    Normaliza montos monetarios argentinos.
-    Tolera texto extra tipo 'TOTAL $ 2.757,90'
-    """
+
     if not texto:
         return ""
 
@@ -102,9 +93,9 @@ def normalizar_razon(texto):
 
 
 def normalizar_numero_factura(texto):
-    """
-    Extrae el número más largo (mejor heurística OCR).
-    """
+
+    # Extrae el número más largo (mejor heurística OCR).
+
     if not texto:
         return ""
 
@@ -117,10 +108,7 @@ def normalizar_numero_factura(texto):
 
 
 def normalizar_tipo_factura(texto):
-    """
-    Detecta A o B correctamente.
-    C solo si aparece como letra real, no desde COD.
-    """
+
     if not texto:
         return ""
 
@@ -141,10 +129,9 @@ HEADERS_TABLA = [
 ]
 
 def normalizar_tabla_items(texto):
-    """
-    Convierte el string de items OCR en una lista de dicts con
-    descripcion, cantidad y subtotal.
-    """
+
+    # Convierte el string de items OCR en una lista de dicts con descripcion, cantidad y subtotal.
+
     if not texto:
         return []
 
@@ -187,7 +174,7 @@ def normalizar_tabla_items(texto):
 
 
 # ============================================================
-# 2) TABLA DE NORMALIZADORES POR CAMPO
+# 2) TABLA DE NORMALIZADORES
 # ============================================================
 
 NORMALIZADORES = {
@@ -214,7 +201,7 @@ def normalizar_csv_validacion(
     ruta_out = os.path.join("./logs", salida)
 
     if not os.path.exists(ruta_in):
-        print(f"❌ No se encontró {ruta_in}")
+        print(f"No se encontró {ruta_in}")
         return
 
     filas_normalizadas = []
@@ -252,11 +239,11 @@ def normalizar_csv_validacion(
                 r["correcto"]
             ])
 
-    print(f"📄 Archivo normalizado generado: {ruta_out}")
+    print(f"Archivo normalizado generado: {ruta_out}")
 
 
 # ============================================================
-# 4) EJECUCIÓN DIRECTA
+# 4) MAIN
 # ============================================================
 
 if __name__ == "__main__":

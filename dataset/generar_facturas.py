@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import os, json, random
 from faker import Faker
 from reportlab.lib.pagesizes import A4
@@ -12,7 +9,7 @@ from io import BytesIO
 
 fake = Faker("es_AR")
 
-# ================== CONFIGURACION ==================
+# CONFIGURACION
 OUTDIR = "facturas"
 os.makedirs(OUTDIR, exist_ok=True)
 
@@ -31,7 +28,8 @@ YOLO_CLASS_MAP = {
     "total": 6
 }
 
-# ================== HELPERS ==================
+# HELPERS
+
 def gen_cuit():
     return f"{random.choice([20,23,27,30])}-{random.randint(10000000,99999999)}-{random.randint(0,9)}"
 
@@ -59,7 +57,7 @@ def bbox_to_yolo(box):
         (y2i-y1i)/HEIGHT
     )
 
-# ================== DATOS ==================
+# DATOS
 def gen_items():
     items=[]
     for _ in range(random.randint(1,3)):
@@ -74,7 +72,6 @@ def gen_items():
 
 def gen_meta(tipo):
 
-    # --- CONDICIÓN IVA SEGÚN TIPO DE FACTURA ---
     if tipo == "A":
         iva_emisor = "Responsable Inscripto"
         iva_receptor = "IVA Responsable Inscripto"
@@ -111,7 +108,7 @@ def gen_meta(tipo):
         "qr": "https://www.afip.gob.ar"
     }
 
-# ================== DIBUJAR FACTURA ==================
+# DIBUJAR FACTURA
 
 def draw_factura(path, tipo, m):
     c = canvas.Canvas(path, pagesize=A4)
@@ -128,7 +125,7 @@ def draw_factura(path, tipo, m):
     top_y = HEIGHT-75*mm
     c.rect(M+5, top_y, WIDTH-2*M-10, 55*mm)
 
-    # ===== TIPO FACTURA =====
+    # TIPO FACTURA
     bx = WIDTH / 2 - 12 * mm
     by = top_y + 36 * mm
     boxes["tipo_factura"] = (bx, by + 2 * mm, bx + 24 * mm, by + 12 * mm)
@@ -139,7 +136,7 @@ def draw_factura(path, tipo, m):
     c.setFont("Helvetica", 7)
     c.drawCentredString(WIDTH / 2, by + 2 * mm, f"COD. {TIPOS[tipo]}")
 
-    # ===== IZQUIERDA EMISOR =====
+    # IZQUIERDA EMISOR
     c.setFont("Helvetica",8)
     lx = M + 10
     ly = by - 4*mm
@@ -162,7 +159,7 @@ def draw_factura(path, tipo, m):
         ly+12*mm
     )
 
-    # ===== DERECHA FACTURA =====
+    # DERECHA FACTURA
     c.setFont("Helvetica-Bold",11)
     c.drawRightString(WIDTH-M-10, ly+6*mm, m["emisor"]["razon"])
 
@@ -207,7 +204,7 @@ def draw_factura(path, tipo, m):
         ly-9*mm
     )
 
-    # ===== PERÍODO FACTURADO =====
+    # PERÍODO FACTURADO
     py = top_y - 12*mm
     c.rect(M+5, py, WIDTH-2*M-10, 12*mm)
     c.setFont("Helvetica",8)
@@ -216,7 +213,7 @@ def draw_factura(path, tipo, m):
         f"Período Facturado Desde: {m['desde']}  Hasta: {m['hasta']}   Fecha de Vto. para el pago: {m['vto']}"
     )
 
-    # ===== CLIENTE / RECEPTOR =====
+    # CLIENTE / RECEPTOR
     cy = py - 22*mm
     c.rect(M+5, cy, WIDTH-2*M-10, 22*mm)
     c.setFont("Helvetica",8)
@@ -227,7 +224,7 @@ def draw_factura(path, tipo, m):
     c.drawRightString(WIDTH-M-10, cy+8*mm, f"Domicilio: {m['receptor']['dom']}")
     c.drawRightString(WIDTH-M-10, cy+2*mm, f"Condición de Venta: {m['receptor']['venta']}")
 
-    # ===== TABLA ITEMS =====
+    # TABLA ITEMS
     ty = cy - 45*mm
     c.rect(M+5, ty, WIDTH-2*M-10, 40*mm)
 
@@ -254,7 +251,7 @@ def draw_factura(path, tipo, m):
         ty + 40 * mm
     )
 
-    # ===== TOTAL =====
+    # TOTAL
     c.setFont("Helvetica-Bold",9)
     c.drawRightString(
         WIDTH-M-10,
@@ -269,13 +266,13 @@ def draw_factura(path, tipo, m):
         ty-6*mm
     )
 
-    # ===== QR =====
+    # QR
     qr = make_qr(m["qr"])
     c.drawImage(qr, M+10, M+10, 30*mm, 30*mm)
 
     c.save()
 
-    # ===== YOLO =====
+    # YOLO
     yolo = []
     for k, b in boxes.items():
         cx, cy, w, h = bbox_to_yolo(b)
@@ -283,7 +280,7 @@ def draw_factura(path, tipo, m):
 
     return yolo
 
-# ================== GENERATE ==================
+# GENERAR
 def generate(n=100):
     ann={}
     for t in TIPOS:
@@ -301,7 +298,7 @@ def generate(n=100):
     with open(os.path.join(OUTDIR,"annotations.json"),"w",encoding="utf8") as f:
         json.dump(ann,f,indent=2,ensure_ascii=False)
 
-    print("✅ Facturas A/B/C estilo ARCA generadas correctamente")
+    print("Facturas A/B/C estilo ARCA generadas correctamente")
 
 if __name__=="__main__":
     generate(2000)

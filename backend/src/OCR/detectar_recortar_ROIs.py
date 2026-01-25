@@ -1,4 +1,3 @@
-import os
 import cv2
 from ultralytics import YOLO
 from pathlib import Path
@@ -16,7 +15,7 @@ MODEL_PATH = PROJECT_ROOT / "runs" / "models" / "model_yolo8n_v4_best.pt"
 print("Ruta del modelo probado:", MODEL_PATH)
 
 if not MODEL_PATH.exists():
-    raise FileNotFoundError(f"❌ Modelo no encontrado en {MODEL_PATH}")
+    raise FileNotFoundError(f"Modelo no encontrado en {MODEL_PATH}")
 
 model = YOLO(str(MODEL_PATH))
 
@@ -27,7 +26,7 @@ TEMP_ROI_DIR = BASE_DIR / "temp_rois"
 TEMP_ROI_DIR.mkdir(exist_ok=True)
 
 # ==============================
-# CLASES (ORDEN REAL DEL DATASET)
+# CLASES
 # ==============================
 CLASSES = [
     "tipo_factura",
@@ -81,7 +80,7 @@ def detectar_recortar_roi_img(img, image_id):
             continue
 
         # ==============================
-        # GUARDAR ROI SIN SOBREESCRIBIR
+        # GUARDAR ROIs
         # ==============================
         roi_name = f"{image_id}_{class_name}_{i}_{int(conf*100)}.png"
         cv2.imwrite(

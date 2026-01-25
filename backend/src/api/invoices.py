@@ -9,6 +9,9 @@ from services.invoice_service import create_invoice, factura_to_response
 from schemas.invoice import InvoiceResponse, InvoiceCreate
 from models import Factura
 
+from PIL import Image
+from pdf2image import convert_from_bytes
+import io
 
 #Router
 router = APIRouter(prefix="/facturas")
@@ -16,6 +19,23 @@ router = APIRouter(prefix="/facturas")
 @router.post("/upload")
 async def upload_factura(file: UploadFile = File(...)):
     contents = await file.read()
+    filename = file.filename.lower()
+
+    # --- Convertir PDF o JPG/JPEG a PNG ---
+    if filename.endswith((".jpg", ".jpeg")):
+        pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
+        buf = io.BytesIO()
+        pil_img.save(buf, format="PNG")
+        contents = buf.getvalue()
+    elif filename.endswith(".pdf"):
+        try:
+            pages = convert_from_bytes(contents, dpi=300)
+            pil_img = pages[0].convert("RGB")
+            buf = io.BytesIO()
+            pil_img.save(buf, format="PNG")
+            contents = buf.getvalue()
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error al procesar PDF: {str(e)}")
 
     img = cv2.imdecode(
         np.frombuffer(contents, np.uint8),
@@ -27,10 +47,8 @@ async def upload_factura(file: UploadFile = File(...)):
 
     resultado = process_invoice_img(img, file.filename)
 
-    # Ahora tabla_items ya es un array de dicts
     tabla_items_list = resultado.get("tabla_items", [])
 
-    # Normalizar salida para el frontend
     return {
         "tipo_factura": resultado.get("tipo_factura", ""),
         "razon_social": resultado.get("razon_social", ""),
@@ -40,7 +58,6 @@ async def upload_factura(file: UploadFile = File(...)):
         "tabla_items": tabla_items_list,
         "total": resultado.get("total", 0.0),
     }
-
 @router.post("/", response_model=InvoiceResponse, status_code=201)
 def create_invoice_endpoint(
     data: InvoiceCreate,

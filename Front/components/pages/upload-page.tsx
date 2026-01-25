@@ -27,7 +27,7 @@ interface UploadPageProps {
 export default function UploadPage({ onFileUpload, onNavigate }: UploadPageProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [tablaItems, setTablaItems] = useState<TablaItem[]>([]) // ✅ inicializamos array vacío
+  const [tablaItems, setTablaItems] = useState<TablaItem[]>([])
   const { toast } = useToast()
 
   const handleFileSelect = async (file: File) => {
@@ -39,7 +39,6 @@ export default function UploadPage({ onFileUpload, onNavigate }: UploadPageProps
       console.log("Factura procesada desde el backend:", data)
       console.log("tabla_items recibidos:", data.tabla_items)
 
-      // Actualizamos el estado interno para que el render de la tabla de items nunca rompa
       setTablaItems(data.tabla_items || [])
 
       toast({
@@ -71,7 +70,7 @@ export default function UploadPage({ onFileUpload, onNavigate }: UploadPageProps
         >
           <h1 className="text-4xl font-bold text-foreground mb-2">Cargue una Factura</h1>
           <p className="text-lg text-muted-foreground">
-            Cargue una factura en formato JPG, PNG o PDF para extraer automáticamente sus datos
+            Cargue una factura en formato JPG, PNG o PDF para extraer automáticamente los datos
           </p>
         </motion.div>
 

@@ -35,7 +35,7 @@ export default function InvoiceTable({ invoices = [], isLoading }: InvoiceTableP
   if ((invoices || []).length === 0) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-lg border border-border bg-white p-8 text-center">
-        <p className="text-muted-foreground">No invoices found</p>
+        <p className="text-muted-foreground">No se encontraron facturas</p>
       </motion.div>
     )
   }
@@ -46,10 +46,10 @@ export default function InvoiceTable({ invoices = [], isLoading }: InvoiceTableP
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/50">
-              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Invoice</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Date</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Provider</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">User</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Número de Factura</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Fecha</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Proveedor</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">CUIT de Proveedor</th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Total</th>
             </tr>
           </thead>

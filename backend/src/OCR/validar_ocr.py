@@ -1,11 +1,8 @@
-# OCR/validar_ocr.py
 import os
 import csv
 import cv2
-
 from OCR.pipeline_detectar_yolo_ocr import procesar_factura_img
 from OCR.normalizar_ocr import NORMALIZADORES
-
 
 # ----------------------------------------
 # 1) Guardar resultados
@@ -40,7 +37,7 @@ def guardar_validacion(resultados, filename="validacion_ocr.csv"):
                 r["correcto"]
             ])
 
-    print(f"📄 Archivo de validación guardado en: {ruta_salida}")
+    print(f"Archivo de validación guardado en: {ruta_salida}")
 
 
 # ----------------------------------------
@@ -89,13 +86,13 @@ def validar_facturas():
     resultados_log = []
 
     for archivo in archivos:
-        print(f"\n🔎 Procesando {archivo}...")
+        print(f"\nProcesando {archivo}...")
 
         ruta = os.path.join(carpeta, archivo)
         img = cv2.imread(ruta)
 
         if img is None:
-            print(f"❌ No se pudo leer la imagen: {ruta}")
+            print(f"No se pudo leer la imagen: {ruta}")
             continue
 
         image_id = os.path.splitext(archivo)[0]
@@ -106,7 +103,7 @@ def validar_facturas():
             texto_ocr = datos.get("texto_ocr") or ""
             texto_esp = esperados.get(campo, "")
 
-            # Normalización segura
+            # Normalización
             if campo in NORMALIZADORES:
                 texto_ocr_norm = NORMALIZADORES[campo](texto_ocr)
                 texto_esp_norm = NORMALIZADORES[campo](texto_esp)
@@ -114,10 +111,9 @@ def validar_facturas():
                 texto_ocr_norm = texto_ocr.strip()
                 texto_esp_norm = texto_esp.strip()
 
-            # Regla especial: tabla_items
+
             if campo == "tabla_items":
                 correcto = texto_ocr_norm != ""
-            # Regla especial: total (comparar decimal)
             elif campo == "total":
                 correcto = texto_ocr_norm == texto_esp_norm
             else:

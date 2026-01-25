@@ -45,7 +45,7 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
   const loadInvoices = async () => {
     setIsLoading(true)
     try {
-      const data = await getInvoices() // ya viene con tipo correcto
+      const data = await getInvoices()
       setInvoices(data)
     } catch (err) {
       console.error("Failed to load invoices:", err)
@@ -99,7 +99,7 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
           </Button>
         </motion.div>
 
-        {/* Filters */}
+        {/* Filtros */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

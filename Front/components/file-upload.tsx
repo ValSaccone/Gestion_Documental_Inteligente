@@ -104,10 +104,10 @@ export default function FileUpload({ onFileSelect, isLoading }: FileUploadProps)
             <p className="font-semibold text-foreground mb-2">{selectedFile.name}</p>
             <p className="text-sm text-muted-foreground mb-4">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
             <Button onClick={handleButtonClick} variant="outline" disabled={isLoading} className="mr-2 bg-transparent">
-              Change File
+              Cambiar archivo
             </Button>
             <Button onClick={handleProcess} disabled={isLoading} className="bg-primary hover:bg-primary/90">
-              {isLoading ? "Processing..." : "Process Invoice"}
+              {isLoading ? "Cargando..." : "Cargar Factura"}
             </Button>
           </motion.div>
         )}

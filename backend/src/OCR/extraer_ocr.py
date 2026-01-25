@@ -3,16 +3,12 @@ from OCR.normalizar_ocr import NORMALIZADORES, normalizar_tabla_items
 
 
 def extraer_factura_backend(img, image_id: str | None = None):
-    """
-    Ejecuta detección + OCR + normalización
-    y devuelve un dict listo para el backend.
-    """
 
     resultado_raw = procesar_factura_img(img, image_id)
 
     salida = {}
 
-    # Normalizar todos los campos que tengan normalizador
+    # Normalizar todos los campos
     for campo, datos in resultado_raw.items():
         texto_ocr = datos.get("texto_ocr", "") or ""
         if campo in NORMALIZADORES:
@@ -20,7 +16,7 @@ def extraer_factura_backend(img, image_id: str | None = None):
         else:
             salida[campo] = texto_ocr.strip()
 
-    # Procesar tabla_items de manera segura
+    # Procesar tabla_items
     tabla_items = salida.get("tabla_items")
     if not isinstance(tabla_items, list):
         if isinstance(tabla_items, str):

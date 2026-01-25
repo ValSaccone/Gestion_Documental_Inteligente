@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,30 +18,16 @@ export interface BackendProcessedData {
   total: number
 }
 
-
 interface ResultsPageProps {
-  data: BackendProcessedData | null // puede ser null inicialmente
+  data: BackendProcessedData | null
   onConfirm: () => void
   onCancel: () => void
 }
 
 export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPageProps) {
-  const [clientData, setClientData] = useState<BackendProcessedData | null>(null)
-  const [isClient, setIsClient] = useState(false) // bandera para detectar cliente
+  const [clientData, setClientData] = useState<BackendProcessedData | null>(data)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
-
-  // Solo activamos cliente después de mount
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Solo en cliente asignamos los datos del backend
-  useEffect(() => {
-    if (data) {
-      setClientData({ ...data, tabla_items: data.tabla_items || [] })
-    }
-  }, [data])
 
   const handleConfirm = async () => {
     if (!clientData) return
@@ -58,8 +44,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
     }
   }
 
-  // Render condicional: si no estamos en cliente o no hay data, mostramos placeholder
-  if (!isClient || !clientData) {
+  if (!clientData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg text-muted-foreground">Cargando datos de la factura...</p>
@@ -78,16 +63,15 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
           <p className="text-muted-foreground">Revise y corrija los datos extraídos antes de confirmar el registro</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-          <InvoiceForm data={clientData} onChange={setClientData} isEditable={true} />
-        </motion.div>
+        {/* 🔹 InvoiceForm ahora maneja localData internamente sin reset */}
+        <InvoiceForm data={clientData} onChange={setClientData} isEditable={true} />
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="outline" onClick={onCancel} disabled={isLoading} className="sm:w-40 bg-transparent">
             Cancelar
           </Button>
           <Button onClick={handleConfirm} disabled={isLoading} className="sm:w-40 bg-primary hover:bg-primary/90">
-            {isLoading ? "Confirmando..." : "Confirmar & Registrar"}
+            {isLoading ? "Confirmando..." : "Confirmar y Registrar"}
           </Button>
         </motion.div>
       </div>

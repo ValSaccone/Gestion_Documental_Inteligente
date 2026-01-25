@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+psycopg2://admin:admin123@localhost:5432/gestion_documental_db"
 
     class Config:
-        env_file = ".env"       # Busca el .env en la misma carpeta que este archivo
+        env_file = ".env"
         env_file_encoding = "utf-8"
 
 # Instancia de configuración

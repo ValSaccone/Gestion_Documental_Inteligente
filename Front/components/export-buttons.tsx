@@ -34,9 +34,7 @@ export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
     toast({ title: "Success", description: "Invoices exported to CSV" })
   }
 
-  const exportToPDF = () => {
-    toast({ title: "Processing", description: "PDF generation not yet implemented" })
-  }
+
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
@@ -44,10 +42,7 @@ export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
         <FileJson className="h-4 w-4" />
         Exportar CSV
       </Button>
-      <Button variant="outline" onClick={exportToPDF} className="gap-2 bg-transparent">
-        <Download className="h-4 w-4" />
-        Exportar PDF
-      </Button>
+
     </motion.div>
   )
 }
