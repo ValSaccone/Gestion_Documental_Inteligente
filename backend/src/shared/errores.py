@@ -35,6 +35,11 @@ ERROR_RESPONSES = {
         "status": status.HTTP_400_BAD_REQUEST,
         "error": "Bad Request"
     },
+    "cuit_duplicado": {
+        "message": "El CUIT del emisor ya pertenece a un proveedor guardado.",
+        "status": status.HTTP_400_BAD_REQUEST,
+        "error": "Bad Request"
+    },
 }
 
 class ResponseErrors(str, Enum):
@@ -44,6 +49,7 @@ class ResponseErrors(str, Enum):
     ERROR_INTERNO = "error_interno"
     IMAGEN_INVALIDA = "imagen_invalida"
     PDF_INVALIDO = "pdf_invalido"
+    CUIT_DUPLICADO = "cuit_duplicado"
 
 
 class ServiceError(Exception):

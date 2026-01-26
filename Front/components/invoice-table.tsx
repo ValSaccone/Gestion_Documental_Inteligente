@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Loader2 } from "lucide-react"
+import { Loader2, Edit, Trash2 } from "lucide-react"
 import { TablaItem } from "@/api/facturas"
 
 export interface Invoice {
@@ -15,13 +15,15 @@ export interface Invoice {
   total: number
 }
 
-
 interface InvoiceTableProps {
   invoices: Invoice[]
   isLoading: boolean
+  onEdit?: (invoice: Invoice) => void
+  onDelete?: (invoiceId: number) => void
+  deletingId?: number | null
 }
 
-export default function InvoiceTable({ invoices = [], isLoading }: InvoiceTableProps) {
+export default function InvoiceTable({ invoices = [], isLoading, onEdit, onDelete, deletingId }: InvoiceTableProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -51,6 +53,7 @@ export default function InvoiceTable({ invoices = [], isLoading }: InvoiceTableP
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Proveedor</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">CUIT de Proveedor</th>
               <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Total</th>
+              <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -67,6 +70,26 @@ export default function InvoiceTable({ invoices = [], isLoading }: InvoiceTableP
                 <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.razon_social}</td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.cuit_emisor}</td>
                 <td className="px-6 py-4 text-right text-sm font-semibold text-foreground">${Number(invoice.total).toFixed(2)}</td>
+                <td className="px-6 py-4 text-center space-x-2">
+                  {onEdit && (
+                    <button onClick={() => onEdit(invoice)} className="text-blue-600 hover:text-blue-800">
+                      <Edit className="inline-block h-4 w-4" />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(invoice.id)}
+                      disabled={deletingId === invoice.id}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      {deletingId === invoice.id ? (
+                        <Loader2 className="inline-block h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="inline-block h-4 w-4" />
+                      )}
+                    </button>
+                  )}
+                </td>
               </motion.tr>
             ))}
           </tbody>

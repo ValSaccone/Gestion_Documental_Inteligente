@@ -75,7 +75,7 @@ export async function confirmInvoice(data: ProcessedData): Promise<void> {
 
   console.log("Payload enviado:", payload)
 
-  const response = await fetch(`${API_BASE_URL}/facturas`, {
+  const response = await fetch(`${API_BASE_URL}/facturas/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -126,4 +126,51 @@ export async function exportInvoices(format: "pdf" | "csv"): Promise<Blob> {
   }
 
   return response.blob()
+}
+
+// =======================
+// Actualizar factura
+// =======================
+export async function updateInvoice(id: number, data: ProcessedData): Promise<void> {
+  const payload = {
+    tipo_factura: data.tipo_factura?.trim() || "",
+    razon_social: data.razon_social?.trim() || "",
+    cuit_emisor: data.cuit_emisor ? data.cuit_emisor.replace(/\D/g, "") : "",
+    numero_factura: data.numero_factura?.trim() || "",
+    fecha: data.fecha?.trim() || "",
+    tabla_items: data.tabla_items.map(item => ({
+      descripcion: item.descripcion?.trim() || "",
+      cantidad: Number(item.cantidad),
+      subtotal: Number(item.subtotal),
+    })),
+    total: Number(data.total),
+  }
+
+  const response = await fetch(`${API_BASE_URL}/facturas/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error("Error backend:", err)
+    throw new Error(err)
+  }
+}
+
+// =======================
+// Eliminar factura
+// =======================
+export async function deleteInvoice(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/facturas/${id}`, {
+    method: "DELETE",
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(err)
+  }
 }

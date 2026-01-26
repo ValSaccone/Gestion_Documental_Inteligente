@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import FiltersBar from "@/components/filters-bar"
 import InvoiceTable from "@/components/invoice-table"
 import ExportButtons from "@/components/export-buttons"
-import {getInvoices} from "@/api/facturas"
-import {TablaItem} from "@/api/facturas"
+import { getInvoices, TablaItem, deleteInvoice } from "@/api/facturas"
+import EditInvoicePage from "@/components/pages/edit-invoice-page"
 
 interface Invoice {
   id: number
@@ -21,7 +21,6 @@ interface Invoice {
   total: number
 }
 
-
 interface InvoicesPageProps {
   onNavigate: (page: "upload" | "results" | "invoices") => void
 }
@@ -33,6 +32,8 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [dateFilter, setDateFilter] = useState("")
   const [providerFilter, setProviderFilter] = useState("")
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
+  const [isDeleting, setIsDeleting] = useState<number | null>(null)
 
   useEffect(() => {
     loadInvoices()
@@ -79,6 +80,46 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
     setFilteredInvoices(filtered)
   }
 
+  const handleEdit = (invoice: Invoice) => {
+    setEditingInvoice(invoice) // Al presionar editar, abrimos la página de edición
+  }
+
+  const handleDelete = async (invoiceId: number) => {
+    if (!confirm("¿Está seguro de que desea eliminar esta factura?")) return
+
+    setIsDeleting(invoiceId)
+    try {
+      await deleteInvoice(invoiceId)
+      await loadInvoices()
+    } catch (err) {
+      console.error("Error al eliminar factura:", err)
+      alert("No se pudo eliminar la factura")
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setEditingInvoice(null) // Volvemos a la lista de facturas
+  }
+
+  const handleEditSuccess = async () => {
+    setEditingInvoice(null) // Cerramos edición
+    await loadInvoices()    // Recargamos la lista
+  }
+
+  // 🔹 Render condicional: si estamos editando, mostramos solo la página de edición
+  if (editingInvoice) {
+    return (
+      <EditInvoicePage
+        invoice={editingInvoice}
+        onCancel={handleEditCancel}
+        onUpdated={handleEditSuccess}
+      />
+    )
+  }
+
+  // 🔹 Render normal: lista de facturas
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 px-4 py-12">
       <div className="mx-auto max-w-7xl">
@@ -126,13 +167,19 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
           <ExportButtons invoices={filteredInvoices} />
         </motion.div>
 
-        {/* Table */}
+        {/* Tabla con acciones */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <InvoiceTable invoices={filteredInvoices} isLoading={isLoading} />
+          <InvoiceTable
+            invoices={filteredInvoices}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            deletingId={isDeleting}
+          />
         </motion.div>
       </div>
     </div>

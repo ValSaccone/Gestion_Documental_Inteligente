@@ -82,3 +82,85 @@ def create_invoice(db: Session, data: dict):
         raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
 
     return factura
+
+
+def update_invoice(db: Session, invoice_id: int, data: dict):
+
+    factura = db.query(Factura).filter(Factura.id == invoice_id).first()
+    if not factura:
+        raise ServiceError(ResponseErrors.NO_ENCONTRADO)
+
+
+    existing_proveedor = db.query(Proveedor).filter(
+        Proveedor.cuit_emisor == data["cuit_emisor"],
+        Proveedor.razon_social != data["razon_social"]
+    ).first()
+
+    if existing_proveedor:
+        raise ServiceError(
+            ResponseErrors.DATOS_DUPLICADOS,  # Ajuste a tu Enum existente
+            "El CUIT del emisor ya pertenece a un proveedor guardado"
+        )
+
+
+    proveedor = db.query(Proveedor).filter(
+        Proveedor.cuit_emisor == data["cuit_emisor"],
+        Proveedor.razon_social == data["razon_social"]
+    ).first()
+
+
+    if not proveedor:
+        proveedor = Proveedor(
+            razon_social=data["razon_social"],
+            cuit_emisor=data["cuit_emisor"]
+        )
+        db.add(proveedor)
+        try:
+            db.commit()
+            db.refresh(proveedor)
+        except Exception as e:
+            db.rollback()
+            raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
+
+    try:
+
+        factura.numero_factura = data["numero_factura"]
+        factura.tipo_factura = data.get("tipo_factura")
+        factura.fecha = datetime.strptime(data["fecha"], "%d/%m/%Y").date() if data.get("fecha") else None
+        factura.total = data["total"]
+        factura.proveedor_id = proveedor.id
+
+
+        db.query(DetalleFactura).filter(DetalleFactura.factura_id == factura.id).delete()
+        db.commit()
+
+
+        for item in data.get("tabla_items", []):
+            detalle = DetalleFactura(
+                descripcion=item["descripcion"],
+                cantidad=item["cantidad"],
+                subtotal=item["subtotal"],
+                factura_id=factura.id
+            )
+            db.add(detalle)
+
+        db.commit()
+        db.refresh(factura)
+        return factura
+
+    except Exception as e:
+        db.rollback()
+        raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
+
+
+def delete_invoice(db: Session, invoice_id: int):
+    factura = db.query(Factura).filter(Factura.id == invoice_id).first()
+    if not factura:
+        raise ServiceError(ResponseErrors.NO_ENCONTRADO)
+
+    try:
+        db.delete(factura)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))

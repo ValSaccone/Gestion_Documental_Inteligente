@@ -15,7 +15,7 @@ export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
 
   const exportToCSV = () => {
     if (!invoices || invoices.length === 0) {
-      toast({ title: "No data", description: "There are no invoices to export", variant: "destructive" })
+      toast({ title: "No data", description: "No hay facturas para exportar", variant: "destructive" })
       return
     }
 
@@ -31,7 +31,7 @@ export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
     a.download = `invoices-${new Date().toISOString().split("T")[0]}.csv`
     a.click()
 
-    toast({ title: "Success", description: "Invoices exported to CSV" })
+    toast({ title: "Success", description: "Facturas exportadas en formato CSV" })
   }
 
 

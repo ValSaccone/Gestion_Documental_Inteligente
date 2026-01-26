@@ -40,7 +40,7 @@ export default function FileUpload({ onFileSelect, isLoading }: FileUploadProps)
     if (validTypes.includes(file.type)) {
       setSelectedFile(file)
     } else {
-      alert("Please upload a JPG, PNG, or PDF file")
+      alert("Cargue un archivo en formato JPG, PNG, o PDF")
     }
   }
 
@@ -95,7 +95,7 @@ export default function FileUpload({ onFileSelect, isLoading }: FileUploadProps)
             <h3 className="text-lg font-semibold text-foreground mb-2">Arrastre y suelte la factura</h3>
             <p className="text-sm text-muted-foreground mb-4">O haga clic para buscar (JPG, PNG, PDF)</p>
             <Button onClick={handleButtonClick} disabled={isLoading} className="bg-primary hover:bg-primary/90">
-              {isLoading ? "Processing..." : "Seleccione el Archivo"}
+              {isLoading ? "Procesando..." : "Seleccione el Archivo"}
             </Button>
           </motion.div>
         ) : (

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { confirmInvoice, TablaItem } from "@/api/facturas"
+import { updateInvoice, deleteInvoice, TablaItem, Invoice } from "@/api/facturas"
 
 interface InputFieldProps {
   label: string
@@ -32,70 +32,58 @@ function InputField({ label, value, onChange, error, type = "text" }: InputField
   )
 }
 
-export interface BackendProcessedData {
-  tipo_factura: string
-  razon_social: string
-  cuit_emisor: string
-  numero_factura: string
-  fecha: string
-  tabla_items: TablaItem[]
-  total: number
-}
-
-interface ResultsPageProps {
-  data: BackendProcessedData | null
-  onConfirm: () => void
+interface EditInvoicePageProps {
+  invoice: Invoice
   onCancel: () => void
+  onUpdated: () => void
 }
 
-export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPageProps) {
-  const [clientData, setClientData] = useState<BackendProcessedData | null>(data)
+export default function EditInvoicePage({ invoice, onCancel, onUpdated }: EditInvoicePageProps) {
+  const [clientData, setClientData] = useState<Invoice>(invoice)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [globalError, setGlobalError] = useState<string>("") // <-- nuevo
   const { toast } = useToast()
 
-  const handleChange = (field: keyof BackendProcessedData, value: any) => {
-      setClientData((prev) => prev ? { ...prev, [field]: value } : null);
+  const handleChange = (field: keyof Invoice, value: any) => {
+    setClientData((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleItemChange = (index: number, field: keyof TablaItem, value: string | number) => {
-      setClientData((prev) => {
-        if (!prev) return null;
-        const newItems = [...prev.tabla_items];
-        newItems[index] = { ...newItems[index], [field]: value };
-        return { ...prev, tabla_items: newItems };
-      });
+    setClientData((prev) => {
+      const newItems = [...prev.tabla_items]
+      newItems[index] = { ...newItems[index], [field]: value }
+      return { ...prev, tabla_items: newItems }
+    })
   }
 
-  const handleConfirm = async () => {
-    if (!clientData) return
-
+  const handleUpdate = async () => {
     setIsLoading(true)
-    setErrors({})
-    setGlobalError("") // limpiar error global
+    setErrors({}) // Limpiar errores previos
 
     try {
-      await confirmInvoice(clientData)
-      toast({ title: "Éxito", description: "Factura registrada correctamente" })
-      onConfirm()
+      await updateInvoice(clientData.id, clientData)
+      toast({ title: "Éxito", description: "Factura actualizada correctamente" })
+      onUpdated()
     } catch (err: any) {
+      console.error(err)
+
       try {
         const parsed = JSON.parse(err.message)
         const fieldErrors: Record<string, string> = {}
 
+        // 🔹 Si detail es un array de errores tipo Pydantic/FastAPI
         if (Array.isArray(parsed.detail)) {
           parsed.detail.forEach((e: any) => {
             const loc = e.loc
             const cleanMsg = e.msg.replace(/^Value error,\s*/i, "")
 
-            // Validación cruzada del total vs subtotales
+            // 🔹 Validación cruzada del total vs subtotales
             if (loc.length === 1 && loc[0] === "body" && cleanMsg.includes("no coincide con la suma de subtotales")) {
               fieldErrors["total"] = cleanMsg
               return
             }
 
-            // Errores de tabla_items
+            // 🔹 Errores de tabla_items
             if (loc[0] === "body" && loc[1] === "tabla_items") {
               const index = loc[2] // índice del item
               const field = loc[3] // descripcion, cantidad, subtotal
@@ -103,7 +91,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
               return
             }
 
-            // Errores de campos normales
+            // 🔹 Errores de campos normales (numero_factura, fecha, total, razon_social, cuit_emisor, etc.)
             const field = loc[loc.length - 1]
             fieldErrors[field] = cleanMsg
           })
@@ -112,21 +100,44 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
           return
         }
 
-        // Error custom del backend (ej: factura duplicada)
+        // 🔹 Error custom (como ServiceError de CUIT duplicado)
         if (parsed.detail?.message) {
-          // en vez de asignarlo a "fecha", lo ponemos como error global
-          setGlobalError(parsed.detail.message)
+          // Asignamos al input correspondiente
+          if (parsed.detail.message.includes("CUIT")) {
+            fieldErrors.cuit_emisor = parsed.detail.message
+            fieldErrors.razon_social = parsed.detail.message
+          } else {
+            fieldErrors.razon_social = parsed.detail.message
+          }
+          setErrors(fieldErrors)
           return
         }
 
       } catch {
-        console.error("Error no parseable:", err)
-        setGlobalError("No se pudo registrar la factura")
+        // Si no se puede parsear, mostramos toast
+        toast({
+          title: "Error",
+          description: "No se pudo actualizar la factura",
+          variant: "destructive",
+        })
       }
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
+  const handleDelete = async () => {
+    if (!confirm("¿Está seguro que desea eliminar esta factura?")) return
+    setIsLoading(true)
+    try {
+      await deleteInvoice(clientData.id)
+      toast({ title: "Éxito", description: "Factura eliminada correctamente" })
+      onUpdated()
+    } catch (err: any) {
+      console.error(err)
       toast({
         title: "Error",
-        description: "No se pudo registrar la factura",
+        description: "No se pudo eliminar la factura",
         variant: "destructive",
       })
     } finally {
@@ -134,34 +145,12 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
     }
   }
 
-  if (!clientData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">
-          Cargando datos de la factura...
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 px-4 py-12">
       <div className="mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">
-              Datos de la Factura
-            </h1>
-          </div>
-          <p className="text-muted-foreground">
-            Revise y corrija los datos extraídos antes de confirmar el registro
-          </p>
+        <motion.div className="mb-8 flex items-center gap-2">
+          <CheckCircle className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold text-foreground">Editar Factura</h1>
         </motion.div>
 
         <motion.div className="space-y-8 rounded-lg border p-6 bg-white shadow-sm">
@@ -226,24 +215,17 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
               />
             </div>
           ))}
-
-          {/* Cartel global de error debajo de todos los inputs */}
-          {globalError && (
-            <p className="text-center text-red-600 font-medium mt-2">{globalError}</p>
-          )}
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mt-8 flex flex-col sm:flex-row gap-4 justify-center"
-        >
+        <motion.div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button onClick={handleConfirm} disabled={isLoading}>
-            {isLoading ? "Confirmando..." : "Confirmar y Registrar"}
+          <Button onClick={handleUpdate} disabled={isLoading}>
+            {isLoading ? "Actualizando..." : "Guardar Cambios"}
+          </Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
+            Eliminar
           </Button>
         </motion.div>
       </div>

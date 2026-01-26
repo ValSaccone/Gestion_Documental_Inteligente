@@ -5,7 +5,7 @@ import cv2
 
 from db.session import get_db
 from services.ocr_service import process_invoice_img
-from services.invoice_service import create_invoice, factura_to_response
+from services.invoice_service import create_invoice, factura_to_response, update_invoice, delete_invoice
 from schemas.invoice import InvoiceResponse, InvoiceCreate
 from models import Factura
 
@@ -60,7 +60,7 @@ async def upload_factura(file: UploadFile = File(...)):
     }
 
 
-@router.post("/", response_model=InvoiceResponse, status_code=201)
+@router.post("/create", response_model=InvoiceResponse, status_code=201)
 def create_invoice_endpoint(
     data: InvoiceCreate,
     db: Session = Depends(get_db)
@@ -86,3 +86,20 @@ def get_invoice(invoice_id: int, db: Session = Depends(get_db)):
         raise_service_error(ResponseErrors.NO_ENCONTRADO)
 
     return factura_to_response(factura)
+
+@router.put("/{invoice_id}", response_model=InvoiceResponse)
+def update_invoice_endpoint(invoice_id: int, data: InvoiceCreate, db: Session = Depends(get_db)):
+    try:
+        factura = update_invoice(db, invoice_id, data.dict())
+        return factura_to_response(factura)
+    except ServiceError as e:
+        raise_service_error(e.error_key, e.detail)
+
+
+@router.delete("/{invoice_id}", status_code=204)
+def delete_invoice_endpoint(invoice_id: int, db: Session = Depends(get_db)):
+    try:
+        delete_invoice(db, invoice_id)
+        return
+    except ServiceError as e:
+        raise_service_error(e.error_key, e.detail)
