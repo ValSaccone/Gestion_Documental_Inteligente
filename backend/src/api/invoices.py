@@ -18,9 +18,6 @@ from shared.errores import ServiceError, raise_service_error, ResponseErrors
 
 router = APIRouter(prefix="/facturas")
 
-@app.get("/")
-def root():
-    return {"status": "ok", "message": "API funcionando"}
 
 @router.post("/upload")
 async def upload_factura(file: UploadFile = File(...)):
