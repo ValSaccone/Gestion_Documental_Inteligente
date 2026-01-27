@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 
 from db.session import get_db
+from main import app
 from services.ocr_service import process_invoice_img
 from services.invoice_service import create_invoice, factura_to_response, update_invoice, delete_invoice
 from schemas.invoice import InvoiceResponse, InvoiceCreate
@@ -17,6 +18,9 @@ from shared.errores import ServiceError, raise_service_error, ResponseErrors
 
 router = APIRouter(prefix="/facturas")
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "API funcionando"}
 
 @router.post("/upload")
 async def upload_factura(file: UploadFile = File(...)):
