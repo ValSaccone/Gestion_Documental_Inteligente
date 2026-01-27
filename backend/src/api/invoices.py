@@ -71,7 +71,7 @@ def create_invoice_endpoint(
         raise_service_error(e.error_key, e.detail)
 
 
-@router.get("", response_model=list[InvoiceResponse])
+@router.get("/", response_model=list[InvoiceResponse])
 def list_invoices(db: Session = Depends(get_db)):
     facturas = db.query(Factura).all()
     return [factura_to_response(f) for f in facturas]
