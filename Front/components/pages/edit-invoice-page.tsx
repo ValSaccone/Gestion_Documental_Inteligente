@@ -102,10 +102,9 @@ export default function EditInvoicePage({ invoice, onCancel, onUpdated }: EditIn
 
         // 🔹 Error custom (como ServiceError de CUIT duplicado)
         if (parsed.detail?.message) {
-          // Asignamos al input correspondiente
+          // 🔹 Ahora CUIT duplicado aparece SOLO en el input de CUIT
           if (parsed.detail.message.includes("CUIT")) {
-            fieldErrors.cuit_emisor = parsed.detail.message
-            fieldErrors.razon_social = parsed.detail.message
+            fieldErrors.cuit_emisor = "El CUIT ingresado ya pertenece a un proveedor"
           } else {
             fieldErrors.razon_social = parsed.detail.message
           }
@@ -188,7 +187,7 @@ export default function EditInvoicePage({ invoice, onCancel, onUpdated }: EditIn
             label="CUIT"
             value={clientData.cuit_emisor}
             onChange={(val) => handleChange("cuit_emisor", val)}
-            error={errors.cuit_emisor}
+            error={errors.cuit_emisor} // 🔹 CUIT duplicado ahora solo se muestra aquí
           />
 
           {clientData.tabla_items.map((item, idx) => (
@@ -212,6 +211,7 @@ export default function EditInvoicePage({ invoice, onCancel, onUpdated }: EditIn
                 value={String(item.subtotal)}
                 onChange={(val) => handleItemChange(idx, "subtotal", Number(val))}
                 error={errors[`tabla_items.${idx}.subtotal`]}
+
               />
             </div>
           ))}

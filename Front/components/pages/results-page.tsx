@@ -52,7 +52,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
   const [clientData, setClientData] = useState<BackendProcessedData | null>(data)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [globalError, setGlobalError] = useState<string>("") // <-- nuevo
+  const [globalError, setGlobalError] = useState<string>("")
   const { toast } = useToast()
 
   const handleChange = (field: keyof BackendProcessedData, value: any) => {
@@ -73,7 +73,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
 
     setIsLoading(true)
     setErrors({})
-    setGlobalError("") // limpiar error global
+    setGlobalError("")
 
     try {
       await confirmInvoice(clientData)
@@ -97,8 +97,8 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
 
             // Errores de tabla_items
             if (loc[0] === "body" && loc[1] === "tabla_items") {
-              const index = loc[2] // índice del item
-              const field = loc[3] // descripcion, cantidad, subtotal
+              const index = loc[2]
+              const field = loc[3]
               fieldErrors[`tabla_items.${index}.${field}`] = cleanMsg
               return
             }
@@ -112,10 +112,17 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
           return
         }
 
-        // Error custom del backend (ej: factura duplicada)
+        // Error custom del backend (ej: CUIT duplicado)
         if (parsed.detail?.message) {
-          // en vez de asignarlo a "fecha", lo ponemos como error global
-          setGlobalError(parsed.detail.message)
+          const msg = parsed.detail.message
+
+          // 🔹 Si es CUIT duplicado, asignarlo al campo cuit_emisor
+          if (msg.includes("CUIT")) {
+            setErrors({ cuit_emisor: "El CUIT ingresado ya pertenece a un proveedor" })
+          } else {
+            setGlobalError(msg) // otros errores
+          }
+
           return
         }
 
@@ -199,7 +206,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
             label="CUIT"
             value={clientData.cuit_emisor}
             onChange={(val) => handleChange("cuit_emisor", val)}
-            error={errors.cuit_emisor}
+            error={errors.cuit_emisor} // 🔹 ahora el error aparece aquí en rojo
           />
 
           {clientData.tabla_items.map((item, idx) => (

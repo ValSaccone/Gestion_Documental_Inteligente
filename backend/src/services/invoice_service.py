@@ -29,15 +29,23 @@ def factura_to_response(factura: Factura):
 
 
 def create_invoice(db: Session, data: dict):
-
     fecha_str = data.get("fecha")
     fecha = datetime.strptime(fecha_str, "%d/%m/%Y").date() if fecha_str else None
 
-    proveedor = (
-        db.query(Proveedor)
-        .filter(Proveedor.cuit_emisor == data["cuit_emisor"], Proveedor.razon_social == data["razon_social"])
-        .first()
-    )
+    # 🔹 Validar CUIT duplicado
+    existing_proveedor = db.query(Proveedor).filter(
+        Proveedor.cuit_emisor == data["cuit_emisor"],
+        Proveedor.razon_social != data["razon_social"]
+    ).first()
+
+    if existing_proveedor:
+        raise ServiceError(ResponseErrors.CUIT_DUPLICADO)
+
+    # 🔹 Obtener o crear proveedor
+    proveedor = db.query(Proveedor).filter(
+        Proveedor.cuit_emisor == data["cuit_emisor"],
+        Proveedor.razon_social == data["razon_social"]
+    ).first()
 
     if not proveedor:
         proveedor = Proveedor(
@@ -45,9 +53,14 @@ def create_invoice(db: Session, data: dict):
             cuit_emisor=data["cuit_emisor"]
         )
         db.add(proveedor)
-        db.commit()
-        db.refresh(proveedor)
+        try:
+            db.commit()
+            db.refresh(proveedor)
+        except Exception as e:
+            db.rollback()
+            raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
 
+    # 🔹 Crear la factura
     try:
         factura = Factura(
             numero_factura=data["numero_factura"],
@@ -76,12 +89,12 @@ def create_invoice(db: Session, data: dict):
     except IntegrityError:
         db.rollback()
         raise ServiceError(ResponseErrors.DATOS_DUPLICADOS, "Factura duplicada")
-
     except Exception as e:
         db.rollback()
         raise ServiceError(ResponseErrors.ERROR_INTERNO, str(e))
 
     return factura
+
 
 
 def update_invoice(db: Session, invoice_id: int, data: dict):
@@ -98,9 +111,7 @@ def update_invoice(db: Session, invoice_id: int, data: dict):
 
     if existing_proveedor:
         raise ServiceError(
-            ResponseErrors.DATOS_DUPLICADOS,  # Ajuste a tu Enum existente
-            "El CUIT del emisor ya pertenece a un proveedor guardado"
-        )
+            ResponseErrors.CUIT_DUPLICADO)
 
 
     proveedor = db.query(Proveedor).filter(

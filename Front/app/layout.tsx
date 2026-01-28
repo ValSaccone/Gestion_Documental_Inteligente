@@ -9,9 +9,7 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FacturaVision - Invoice Digitization",
-  description: "Modern OCR-based invoice processing and management system",
-    generator: 'v0.app'
+  title: "Gestion Documental Inteligente"
 }
 
 export default function RootLayout({
