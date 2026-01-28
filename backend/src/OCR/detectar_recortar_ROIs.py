@@ -6,15 +6,11 @@ from pathlib import Path
 # MODELO
 # ==============================
 
-#BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent
 
-#PROJECT_ROOT = BASE_DIR.parents[2]
+PROJECT_ROOT = BASE_DIR.parents[2]
 
-#MODEL_PATH = PROJECT_ROOT / "runs" / "models" / "model_yolo8n_v4_best.pt"
-
-BASE_DIR = Path(__file__).resolve().parents[1]  # src
-MODEL_PATH = BASE_DIR / "runs" / "models" / "model_yolo8n_v4_best.pt"
-
+MODEL_PATH = PROJECT_ROOT / "runs" / "models" / "model_yolo8n_v4_best.pt"
 
 print("Ruta del modelo probado:", MODEL_PATH)
 
