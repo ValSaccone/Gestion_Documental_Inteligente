@@ -12,9 +12,8 @@ from pathlib import Path
 
 #MODEL_PATH = PROJECT_ROOT / "runs" / "models" / "model_yolo8n_v4_best.pt"
 
-
-BASE_DIR = Path(__file__).resolve().parent  # backend/src/OCR
-MODEL_PATH = BASE_DIR.parent / "runs" / "models" / "model_yolo8n_v4_best.pt"
+BASE_DIR = Path(__file__).resolve().parents[1]  # src
+MODEL_PATH = BASE_DIR / "runs" / "models" / "model_yolo8n_v4_best.pt"
 
 
 print("Ruta del modelo probado:", MODEL_PATH)
