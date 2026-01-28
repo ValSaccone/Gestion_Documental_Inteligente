@@ -26,9 +26,9 @@ OCR/facturas_prueba
 
 
 # --- WEIGHTS / MODEL FILES ---
-#*.pt
-#*.onnx
-#*.engine
+*.pt
+*.onnx
+*.engine
 
 #--- Logs y temp rois ---
 OCR/logs
