@@ -3,8 +3,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     APP_NAME: str = "Backend Gestion Documental"
     APP_VERSION: str = "1.0.0"
-    #DATABASE_URL: str = "postgresql+psycopg2://admin:admin123@localhost:5432/gestion_documental_db"
-    DATABASE_URL: str
+    DATABASE_URL: str = "postgresql+psycopg2://admin:admin123@localhost:5432/gestion_documental_db"
 
     class Config:
         env_file = ".env"
