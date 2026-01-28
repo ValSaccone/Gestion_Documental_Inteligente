@@ -23,8 +23,9 @@ dataset/facturas/
 ML_module/dataset_dividido/
 ML_module/dataset_dividido_augmented/
 OCR/facturas_prueba
-# --- YOLO RUNS ---
-runs/
+OCR/temp_rois
+
+
 
 # --- WEIGHTS / MODEL FILES ---
 *.pt
