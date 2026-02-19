@@ -49,6 +49,7 @@ export default function InvoiceTable({ invoices = [], isLoading, onEdit, onDelet
           <thead>
             <tr className="border-b border-border bg-muted/50">
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Número de Factura</th>
+              <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Tipo de Factura</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Fecha</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Proveedor</th>
               <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">CUIT de Proveedor</th>
@@ -66,6 +67,7 @@ export default function InvoiceTable({ invoices = [], isLoading, onEdit, onDelet
                 className="border-b border-border hover:bg-muted/50 transition-colors"
               >
                 <td className="px-6 py-4 text-sm font-medium text-foreground">{invoice.numero_factura}</td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.tipo_factura}</td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.fecha}</td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.razon_social}</td>
                 <td className="px-6 py-4 text-sm text-muted-foreground">{invoice.cuit_emisor}</td>

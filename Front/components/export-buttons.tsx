@@ -19,8 +19,8 @@ export default function ExportButtons({ invoices = [] }: ExportButtonsProps) {
       return
     }
 
-    const headers = ["Invoice Number", "Date", "Provider", "CUIT", "Total"]
-    const rows = invoices?.map((inv) => [inv.numero_factura, inv.fecha, inv.razon_social, inv.cuit_emisor, inv.total])
+    const headers = ["Numero Factura","Tipo Factura", "Fecha", "Proveedor", "CUIT", "Total"]
+    const rows = invoices?.map((inv) => [inv.numero_factura,inv.tipo_factura, inv.fecha, inv.razon_social, inv.cuit_emisor, inv.total])
 
     const csv = [headers.join(","), ...rows?.map((row) => row.join(","))].join("\n")
 

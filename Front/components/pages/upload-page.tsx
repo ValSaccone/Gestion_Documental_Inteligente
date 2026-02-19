@@ -93,7 +93,7 @@ export default function UploadPage({ onFileUpload, onNavigate }: UploadPageProps
           <FileUpload onFileSelect={handleFileSelect} isLoading={isLoading} />
         </motion.div>
 
-        {/* Ejemplo de render seguro de items */}
+
         {tablaItems.length > 0 && (
           <motion.section className="mt-6">
             <h2 className="text-xl font-bold mb-2">Items extraídos</h2>

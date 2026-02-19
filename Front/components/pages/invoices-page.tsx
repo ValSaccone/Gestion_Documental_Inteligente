@@ -68,7 +68,16 @@ export default function InvoicesPage({ onNavigate }: InvoicesPageProps) {
     }
 
     if (dateFilter) {
-      filtered = filtered.filter((inv) => inv.fecha.startsWith(dateFilter))
+      filtered = filtered.filter((inv) => {
+      if (!inv.fecha) return false
+
+      // inv.fecha = "DD/MM/YYYY"
+      const [day, month, year] = inv.fecha.split("/")
+
+      const normalizedInvoiceDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+
+      return normalizedInvoiceDate === dateFilter
+      })
     }
 
     if (providerFilter) {

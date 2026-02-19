@@ -113,15 +113,15 @@ export default function FileUpload({ onFileSelect, isLoading }: FileUploadProps)
         )}
       </motion.div>
 
-      {/* Supported Formats */}
+      {/* Supported Formats
       <div className="rounded-lg bg-muted/50 p-4">
-        <p className="text-sm font-medium text-foreground mb-2">Formatos soportados::</p>
+        <p className="text-sm font-medium text-foreground mb-2">Formatos soportados:</p>
         <ul className="text-sm text-muted-foreground space-y-1">
           <li>• JPG/JPEG (max 10 MB)</li>
           <li>• PNG (max 10 MB)</li>
           <li>• PDF (max 10 MB)</li>
         </ul>
-      </div>
+      </div>*/}
     </div>
   )
 }

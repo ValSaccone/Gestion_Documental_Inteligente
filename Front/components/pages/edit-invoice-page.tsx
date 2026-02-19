@@ -160,6 +160,14 @@ export default function EditInvoicePage({ invoice, onCancel, onUpdated }: EditIn
               onChange={(val) => handleChange("numero_factura", val)}
               error={errors.numero_factura}
             />
+
+            <InputField
+              label="Tipo de Factura"
+              value={clientData.tipo_factura}
+              onChange={(val) => handleChange("tipo_factura", val)}
+              error={errors.tipo_factura}
+            />
+
             <InputField
               label="Fecha"
               value={clientData.fecha}

@@ -179,6 +179,14 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
               onChange={(val) => handleChange("numero_factura", val)}
               error={errors.numero_factura}
             />
+
+            <InputField
+              label="Tipo de Factura"
+              value={clientData.tipo_factura}
+              onChange={(val) => handleChange("tipo_factura", val)}
+              error={errors.tipo_factura}
+            />
+
             <InputField
               label="Fecha"
               value={clientData.fecha}
@@ -234,7 +242,7 @@ export default function ResultsPage({ data, onConfirm, onCancel }: ResultsPagePr
             </div>
           ))}
 
-          {/* Cartel global de error debajo de todos los inputs */}
+
           {globalError && (
             <p className="text-center text-red-600 font-medium mt-2">{globalError}</p>
           )}
