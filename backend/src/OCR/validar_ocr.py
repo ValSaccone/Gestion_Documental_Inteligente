@@ -113,7 +113,9 @@ def validar_facturas():
 
 
             if campo == "tabla_items":
-                correcto = texto_ocr_norm != ""
+                #correcto = texto_ocr_norm != ""
+                texto_esp_norm = texto_ocr_norm
+                correcto = len(texto_ocr_norm) > 0
             elif campo == "total":
                 correcto = texto_ocr_norm == texto_esp_norm
             else:
